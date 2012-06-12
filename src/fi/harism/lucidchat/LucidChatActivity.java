@@ -39,7 +39,7 @@ public class LucidChatActivity extends Activity {
         	span.setSpan(new URLSpan("tel:+358-123 123 123"), 29, 35, 0);        	
         	span.setSpan(new URLSpan("http://www.hs.fi"), 37, 45, 0);
         	span.setSpan(new URLSpan("mailto:harism@gmail.com"), 47, 55, 0);
-        	span.setSpan(new ForegroundColorSpan(0xFF6AD46A), 47, 55, 0);
+        	span.setSpan(new ForegroundColorSpan(0xFFAACB63), 47, 55, 0);
         	
         	tv.setMovementMethod(LinkMovementMethod.getInstance());        	
         	tv.setText(span, BufferType.SPANNABLE);
