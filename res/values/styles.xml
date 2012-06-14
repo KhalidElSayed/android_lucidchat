@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="textview">
+        <item name="android:typeface">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="textview_title" parent="textview">
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">#EEE</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:padding">3dp</item>
+    </style>
+
+    <style name="edittext" parent="textview_title">
+        <item name="android:textSize">16sp</item>
+        <item name="android:background">#4FFF</item>
+        <item name="android:padding">2dp</item>
+    </style>
+
+    <style name="button" parent="textview_title">
+        <item name="android:padding">2dp</item>
+        <item name="android:background">@drawable/bg_button</item>
+    </style>
+
+    <style name="imagebutton" parent="button">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="header">
+        <item name="android:id">@+id/header</item>
+        <item name="android:background">@drawable/bg_pattern_light</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+    </style>
+
+    <style name="separator">
+        <item name="android:id">@+id/separator</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">2dp</item>
+        <item name="android:layout_below">@id/header</item>
+        <item name="android:background">#000</item>
+    </style>
+
+    <style name="footer">
+        <item name="android:id">@+id/footer</item>
+        <item name="android:background">@drawable/bg_pattern_light</item>
+        <item name="android:padding">2dp</item>
+    </style>
+
+    <style name="content">
+        <item name="android:background">@drawable/bg_pattern_dark</item>
+        <item name="android:layout_below">@id/separator</item>
+        <item name="android:layout_above">@id/footer</item>
+    </style>
+
+</resources>

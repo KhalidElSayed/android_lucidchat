@@ -4,13 +4,7 @@
     <corners android:radius="3dp" />
 
     <gradient
-        android:endColor="#4F82"
-        android:startColor="#4D61" />
-
-    <stroke
-        android:color="#2444"
-        android:dashGap="5dp"
-        android:dashWidth="5dp"
-        android:width="2dp" />
+        android:endColor="#7F82"
+        android:startColor="#7D61" />
 
 </shape>
