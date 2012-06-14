@@ -38,25 +38,25 @@
         <item name="android:paddingRight">10dp</item>
         <item name="android:paddingTop">2dp</item>
         <item name="android:paddingBottom">2dp</item>
-    </style>
-
-    <style name="separator">
-        <item name="android:id">@+id/separator</item>
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">2dp</item>
-        <item name="android:layout_below">@id/header</item>
-        <item name="android:background">#000</item>
+        <item name="android:layout_marginBottom">2dp</item>
     </style>
 
     <style name="footer">
         <item name="android:id">@+id/footer</item>
         <item name="android:background">@drawable/bg_pattern_light</item>
         <item name="android:padding">2dp</item>
+        <item name="android:layout_marginTop">2dp</item>
     </style>
 
     <style name="content">
         <item name="android:background">@drawable/bg_pattern_dark</item>
-        <item name="android:layout_below">@id/separator</item>
+        <item name="android:layout_below">@id/header</item>
+        <item name="android:layout_above">@id/footer</item>
+    </style>
+
+    <style name="menu">
+        <item name="android:background">@drawable/bg_pattern_light</item>
+        <item name="android:layout_below">@id/header</item>
         <item name="android:layout_above">@id/footer</item>
     </style>
 
