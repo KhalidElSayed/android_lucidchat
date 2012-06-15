@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.view.KeyEvent;
 import android.view.View;
@@ -52,10 +51,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	private void onChatEvent(ChatEvent event) {
 		if (mDlgLogin != null) {
-			int cmd = -1;
-			if (Character.isDigit(event.mCommand.charAt(0))) {
-				cmd = Integer.parseInt(event.mCommand);
-			}
+			int cmd = ChatUtils.getCommand(event);
 			if (cmd == 1) {
 				setSendEnabled(true);
 				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
@@ -87,9 +83,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		TextView tv = (TextView) getLayoutInflater().inflate(
 				R.layout.chat_textview, null);
 
-		SpannableString span = ChatUtils.createSpannable(event);
 		tv.setMovementMethod(LinkMovementMethod.getInstance());
-		tv.setText(span, BufferType.SPANNABLE);
+		tv.setText(ChatUtils.createSpannable(event), BufferType.SPANNABLE);
 
 		chat.addView(tv);
 
@@ -263,7 +258,9 @@ public class ChatActivity extends Activity implements ServiceConnection,
 				for (int i = 0; i < events.getSize(); ++i) {
 					onChatEvent(events.get(i));
 				}
-
+				setSendEnabled(true);
+			} else {
+				setSendEnabled(false);
 			}
 			mService.setCallback(mClient);
 		} catch (RemoteException ex) {

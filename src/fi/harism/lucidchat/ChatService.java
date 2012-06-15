@@ -160,7 +160,10 @@ public class ChatService extends Service implements ChatObserver {
 				}
 				Log.d("sendEvent", out.toString());
 				mChatRunnable.send(out.toString());
-				postChatEvent(event);
+
+				if (event.mCommand.equals("PRIVMSG")) {
+					postChatEvent(event);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

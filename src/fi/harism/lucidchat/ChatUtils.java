@@ -4,6 +4,7 @@ import java.io.StringWriter;
 import java.util.Calendar;
 
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
@@ -13,6 +14,7 @@ public final class ChatUtils {
 	private static final int COLOR_ERROR = 0xFFE26E9B;
 	private static final int COLOR_LINK = 0xFFAACB63;
 	private static final int COLOR_MESSAGE = 0xFFD0D0D0;
+	private static final int COLOR_NICK = 0xFFaecaea;
 	private static final int COLOR_NOTICE = 0xFFB0B0B0;
 	private static final int COLOR_SERVER = 0xFF63CB63;
 	private static final int COLOR_TIME = 0xFF4CBAED;
@@ -36,15 +38,7 @@ public final class ChatUtils {
 		return out.toString();
 	}
 
-	public static SpannableString createSpannable(ChatEvent event) {
-		mCalendar.setTimeInMillis(event.mTime);
-		String time = String.format("%02d:%02d ",
-				mCalendar.get(Calendar.HOUR_OF_DAY),
-				mCalendar.get(Calendar.MINUTE));
-		String text = time + event.mMessage;
-
-		SpannableString span = new SpannableString(text);
-		span.setSpan(new ForegroundColorSpan(COLOR_TIME), 0, time.length(), 0);
+	public static SpannableStringBuilder createSpannable(ChatEvent event) {
 
 		int color = COLOR_SERVER;
 		if (event.mCommand.equals("PRIVMSG")) {
@@ -56,26 +50,65 @@ public final class ChatUtils {
 		if (event.mCommand.equals(ChatEvent.CMD_EXCEPTION)) {
 			color = COLOR_ERROR;
 		}
-		if (Character.isDigit(event.mCommand.charAt(0))) {
-			int code = Integer.parseInt(event.mCommand);
-			if (code >= 400 && code < 600) {
-				color = COLOR_ERROR;
-			}
+		if (getCommand(event) >= 400 && getCommand(event) < 600) {
+			color = COLOR_ERROR;
 		}
 
-		span.setSpan(new ForegroundColorSpan(color), time.length(),
-				text.length(), 0);
+		SpannableStringBuilder output = new SpannableStringBuilder();
+		SpannableString span;
 
+		mCalendar.setTimeInMillis(event.mTime);
+		String time = String.format("%02d:%02d ",
+				mCalendar.get(Calendar.HOUR_OF_DAY),
+				mCalendar.get(Calendar.MINUTE));
+		span = new SpannableString(time);
+		span.setSpan(new ForegroundColorSpan(COLOR_TIME), 0, span.length(), 0);
+		output.append(span);
+
+		if (getCommand(event) < 0) {
+			if (event.mCommand.equals("PRIVMSG")) {
+				String text = event.mFrom;
+				if (event.mMessage.startsWith((char) 0x01 + "ACTION ")) {
+					text = "* " + text + " ";
+				} else {
+					text += ": ";
+				}
+				span = new SpannableString(text);
+				span.setSpan(new ForegroundColorSpan(COLOR_NICK), 0,
+						span.length(), 0);
+			} else {
+				span = new SpannableString(event.mCommand + " ");
+				span.setSpan(new ForegroundColorSpan(color), 0, span.length(),
+						0);
+			}
+			output.append(span);
+		}
+
+		if (event.mMessage.startsWith((char) 0x01 + "ACTION ")) {
+			span = new SpannableString(event.mMessage.substring(8));
+			color = COLOR_NOTICE;
+		} else {
+			span = new SpannableString(event.mMessage);
+		}
+		span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
 		Linkify.addLinks(span, Linkify.ALL);
-		URLSpan spans[] = span.getSpans(0, text.length(), URLSpan.class);
+		URLSpan spans[] = span.getSpans(0, span.length(), URLSpan.class);
 		for (URLSpan s : spans) {
 			int startIdx = span.getSpanStart(s);
 			int endIdx = span.getSpanEnd(s);
 			span.setSpan(new ForegroundColorSpan(COLOR_LINK), startIdx, endIdx,
 					0);
 		}
+		output.append(span);
 
-		return span;
+		return output;
+	}
+
+	public static int getCommand(ChatEvent event) {
+		if (Character.isDigit(event.mCommand.charAt(0))) {
+			return Integer.parseInt(event.mCommand);
+		}
+		return -1;
 	}
 
 	public static ChatEvent getEvent(String message) {
@@ -88,19 +121,23 @@ public final class ChatUtils {
 		}
 
 		event.mCommand = parts[idx++].toUpperCase();
-		if (event.mFrom != null) {
+
+		int cmd = ChatUtils.getCommand(event);
+		if (cmd >= 0) {
 			event.mTo = parts[idx++];
 		}
 
-		int cmd = -1;
-		if (Character.isDigit(event.mCommand.charAt(0))) {
-			cmd = Integer.parseInt(event.mCommand);
+		if (event.mCommand.equals("PRIVMSG")) {
+			event.mTo = parts[idx++];
+		}
+		if (cmd == 353) {
+			event.mTo = parts[idx += 2];
 		}
 		if (cmd == 432 || cmd == 433 || cmd == 436 || cmd == 437) {
-			event.mMessage = concat(parts, idx + 1, parts.length - 1, true);
-		} else {
-			event.mMessage = concat(parts, idx, parts.length - 1, true);
+			++idx;
 		}
+
+		event.mMessage = concat(parts, idx, parts.length - 1, true);
 
 		return event;
 	}
