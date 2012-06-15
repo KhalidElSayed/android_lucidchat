@@ -1,7 +1,6 @@
 package fi.harism.lucidchat;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +30,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	private final ClientBinder mClient = new ClientBinder();
 	private IService mService;
+	private ChatDlgLogin mDlgLogin;
 
 	private boolean menuIsVisible(int menuId) {
 		View v = findViewById(menuId);
@@ -133,30 +133,9 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			break;
 		}
 		case R.id.connect: {
-
-			try {
-				mService.connect("harismm", "irc.nebula.fi", 6667);
-
-				View v = findViewById(R.id.send);
-				v.setEnabled(true);
-
-				v = findViewById(R.id.edit);
-				v.setEnabled(true);
-				v.setFocusableInTouchMode(true);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-
-				Dialog dlg = new Dialog(this);
-				dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
-				dlg.setContentView(R.layout.dialog_login);
-
-				dlg.findViewById(R.id.button_dlg_login)
-						.setOnClickListener(this);
-				dlg.findViewById(R.id.button_dlg_cancel).setOnClickListener(
-						this);
-
-				// dlg.show();
-			}
+			mDlgLogin = new ChatDlgLogin(this);
+			mDlgLogin.setOnClickListener(this);
+			mDlgLogin.show();
 			break;
 		}
 		case R.id.disconnect: {
@@ -169,6 +148,29 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 			try {
 				mService.disconnect();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			break;
+		}
+		case R.id.dlg_login_cancel: {
+			mDlgLogin.dismiss();
+			mDlgLogin = null;
+			break;
+		}
+		case R.id.dlg_login_login: {
+			try {
+				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(), mDlgLogin.getPort());
+				
+				mDlgLogin.dismiss();
+				mDlgLogin = null;
+				
+				View v = findViewById(R.id.send);
+				v.setEnabled(true);
+
+				v = findViewById(R.id.edit);
+				v.setEnabled(true);
+				v.setFocusableInTouchMode(true);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}

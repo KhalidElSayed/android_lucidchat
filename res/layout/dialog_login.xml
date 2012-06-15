@@ -32,11 +32,11 @@
             android:text="Nickname:" />
 
         <EditText
+            android:id="@+id/dlg_login_nick"
             style="@style/edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="harism" />
+            android:gravity="center" />
 
         <TextView
             style="@style/textview"
@@ -45,11 +45,11 @@
             android:text="Server (e.g irc.xs4all.nl):" />
 
         <EditText
+            android:id="@+id/dlg_login_host"
             style="@style/edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="irc.nebula.fi" />
+            android:gravity="center" />
 
         <TextView
             style="@style/textview"
@@ -58,13 +58,13 @@
             android:text="Server Port (default 6667):" />
 
         <EditText
+            android:id="@+id/dlg_login_port"
             style="@style/edittext"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:maxLength="5"
-            android:numeric="integer"
-            android:text="6667" />
+            android:numeric="integer" />
     </LinearLayout>
 
     <LinearLayout
@@ -80,7 +80,7 @@
             android:layout_weight="0.5" />
 
         <Button
-            android:id="@+id/button_dlg_cancel"
+            android:id="@+id/dlg_login_cancel"
             style="@style/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -93,7 +93,7 @@
             android:layout_weight="0.5" />
 
         <Button
-            android:id="@+id/button_dlg_login"
+            android:id="@+id/dlg_login_login"
             style="@style/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
