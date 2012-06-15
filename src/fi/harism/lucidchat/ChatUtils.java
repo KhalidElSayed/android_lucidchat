@@ -1,5 +1,6 @@
 package fi.harism.lucidchat;
 
+import java.io.StringWriter;
 import java.util.Calendar;
 
 import android.text.SpannableString;
@@ -16,6 +17,23 @@ public final class ChatUtils {
 	private static final int COLOR_TIME = 0xFF4CBAED;
 
 	private static final Calendar mCalendar = Calendar.getInstance();
+
+	public static String concatParams(String[] parts, int first, int last) {
+		boolean stripColon = true;
+		StringWriter out = new StringWriter();
+		for (int i = first; i <= last; ++i) {
+			if (i > first) {
+				out.append(' ');
+			}
+			if (stripColon && parts[i].charAt(0) == ':') {
+				out.append(parts[i].substring(1));
+				stripColon = false;
+			} else {
+				out.append(parts[i]);
+			}
+		}
+		return out.toString();
+	}
 
 	public static SpannableString createSpannable(ChatEvent event) {
 		mCalendar.setTimeInMillis(event.mTime);
@@ -40,7 +58,7 @@ public final class ChatUtils {
 				color = COLOR_ERROR;
 			}
 		}
-				
+
 		span.setSpan(new ForegroundColorSpan(color), time.length(),
 				text.length(), 0);
 
@@ -54,6 +72,38 @@ public final class ChatUtils {
 		}
 
 		return span;
+	}
+
+	public static ChatEvent parseEvent(String message) {
+		ChatEvent event = new ChatEvent();
+
+		int idx = 0;
+		String parts[] = message.split(" ");
+		if (parts[idx].startsWith(":")) {
+			event.mFrom = parseFrom(parts[idx++]);
+		}
+
+		event.mCommand = parts[idx++].toUpperCase();
+		if (event.mFrom != null) {
+			event.mTo = parts[idx++];
+		}
+
+		event.mMessage = concatParams(parts, idx, parts.length - 1);
+
+		return event;
+	}
+
+	public static String parseFrom(String from) {
+		if (from.charAt(0) != ':') {
+			return from;
+		}
+
+		int endIdx = from.indexOf('!');
+		if (endIdx == -1) {
+			endIdx = from.length();
+		}
+
+		return from.substring(1, endIdx);
 	}
 
 }

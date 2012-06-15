@@ -11,8 +11,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.URLSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +25,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
-import fi.harism.lucidchat.IService;
-import fi.harism.lucidchat.IServiceCallback;
 
 public class ChatActivity extends Activity implements ServiceConnection,
 		View.OnClickListener {
@@ -140,7 +136,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 			try {
 				mService.connect("harismm", "irc.nebula.fi", 6667);
-				
+
 				View v = findViewById(R.id.send);
 				v.setEnabled(true);
 
@@ -170,7 +166,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			v = findViewById(R.id.edit);
 			v.setEnabled(false);
 			v.setFocusable(false);
-			
+
 			try {
 				mService.disconnect();
 			} catch (RemoteException e) {

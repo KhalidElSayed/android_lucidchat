@@ -13,9 +13,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
-import fi.harism.lucidchat.R;
-import fi.harism.lucidchat.IService;
-import fi.harism.lucidchat.IServiceCallback;
 
 public class ChatService extends Service implements ChatObserver {
 
@@ -45,7 +42,7 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public void onChatMessage(String host, String message) {
 		Log.d("onChatMessage", message);
-		ChatEvent event = ChatEventParser.parse(message);
+		ChatEvent event = ChatUtils.parseEvent(message);
 		if (event.mCommand.equals("PING")) {
 			try {
 				mChatRunnable.send("PONG " + event.mMessage);

@@ -2,7 +2,6 @@ package fi.harism.lucidchat;
 
 import java.util.Vector;
 
-
 import android.os.Parcel;
 import android.os.Parcelable;
 
