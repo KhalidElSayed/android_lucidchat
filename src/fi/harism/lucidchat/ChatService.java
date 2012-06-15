@@ -1,4 +1,4 @@
-package fi.harism.lucidchat.service;
+package fi.harism.lucidchat;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -13,8 +13,9 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
-import fi.harism.lucidchat.ChatActivity;
 import fi.harism.lucidchat.R;
+import fi.harism.lucidchat.IService;
+import fi.harism.lucidchat.IServiceCallback;
 
 public class ChatService extends Service implements ChatObserver {
 

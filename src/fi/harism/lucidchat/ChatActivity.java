@@ -27,11 +27,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
-import fi.harism.lucidchat.service.ChatEvent;
-import fi.harism.lucidchat.service.ChatEventList;
-import fi.harism.lucidchat.service.ChatService;
-import fi.harism.lucidchat.service.IService;
-import fi.harism.lucidchat.service.IServiceCallback;
+import fi.harism.lucidchat.IService;
+import fi.harism.lucidchat.IServiceCallback;
 
 public class ChatActivity extends Activity implements ServiceConnection,
 		View.OnClickListener {
@@ -91,20 +88,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	private void onChatEvent(ChatEvent event) {
 		if (event.mCommand.equals(ChatEvent.CMD_CONNECT)) {
-			View v = findViewById(R.id.send);
-			v.setEnabled(true);
-
-			v = findViewById(R.id.edit);
-			v.setEnabled(true);
-			v.setFocusableInTouchMode(true);
 		}
 		if (event.mCommand.equals(ChatEvent.CMD_DISCONNECT)) {
-			View v = findViewById(R.id.send);
-			v.setEnabled(false);
-
-			v = findViewById(R.id.edit);
-			v.setEnabled(false);
-			v.setFocusable(false);
 		}
 
 		ViewGroup chat = (ViewGroup) findViewById(R.id.chat);
@@ -130,8 +115,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	}
 
 	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
+	public void onClick(View view) {
+		switch (view.getId()) {
 		case R.id.send: {
 			EditText edit = (EditText) findViewById(R.id.edit);
 			String txt = edit.getText().toString().trim();
@@ -155,6 +140,13 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 			try {
 				mService.connect("harismm", "irc.nebula.fi", 6667);
+				
+				View v = findViewById(R.id.send);
+				v.setEnabled(true);
+
+				v = findViewById(R.id.edit);
+				v.setEnabled(true);
+				v.setFocusableInTouchMode(true);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 
@@ -172,11 +164,19 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			break;
 		}
 		case R.id.disconnect: {
+			View v = findViewById(R.id.send);
+			v.setEnabled(false);
+
+			v = findViewById(R.id.edit);
+			v.setEnabled(false);
+			v.setFocusable(false);
+			
 			try {
 				mService.disconnect();
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
+			break;
 		}
 		}
 	}

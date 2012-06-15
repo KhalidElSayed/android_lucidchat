@@ -1,6 +1,7 @@
-package fi.harism.lucidchat.service;
+package fi.harism.lucidchat;
 
 import java.io.StringWriter;
+
 
 public final class ChatEventParser {
 

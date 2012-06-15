@@ -6,10 +6,10 @@ import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
-import fi.harism.lucidchat.service.ChatEvent;
 
 public final class ChatUtils {
 
+	private static final int COLOR_ERROR = 0xFFE26E9B;
 	private static final int COLOR_LINK = 0xFFAACB63;
 	private static final int COLOR_MESSAGE = 0xFFD0D0D0;
 	private static final int COLOR_SERVER = 0xFF63CB63;
@@ -31,6 +31,16 @@ public final class ChatUtils {
 		if (event.mCommand.equals("PRIVMSG")) {
 			color = COLOR_MESSAGE;
 		}
+		if (event.mCommand.equals(ChatEvent.CMD_EXCEPTION)) {
+			color = COLOR_ERROR;
+		}
+		if (Character.isDigit(event.mCommand.charAt(0))) {
+			int code = Integer.parseInt(event.mCommand);
+			if (code >= 400 && code < 600) {
+				color = COLOR_ERROR;
+			}
+		}
+				
 		span.setSpan(new ForegroundColorSpan(color), time.length(),
 				text.length(), 0);
 

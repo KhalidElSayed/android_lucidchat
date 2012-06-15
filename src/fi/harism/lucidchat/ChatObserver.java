@@ -1,4 +1,4 @@
-package fi.harism.lucidchat.service;
+package fi.harism.lucidchat;
 
 public interface ChatObserver {
 

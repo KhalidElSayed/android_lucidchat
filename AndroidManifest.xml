@@ -23,7 +23,7 @@
         </activity>
 
         <service
-            android:name=".service.ChatService"
+            android:name=".ChatService"
             android:process=":service" >
         </service>
     </application>

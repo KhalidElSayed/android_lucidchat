@@ -1,4 +1,4 @@
-package fi.harism.lucidchat.service;
+package fi.harism.lucidchat;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -77,7 +77,7 @@ public class ChatRunnable implements Runnable {
 
 			if (mKeepRunning) {
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(10000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

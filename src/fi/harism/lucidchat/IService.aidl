@@ -1,8 +1,8 @@
-package fi.harism.lucidchat.service;
+package fi.harism.lucidchat;
 
-import fi.harism.lucidchat.service.IServiceCallback;
-import fi.harism.lucidchat.service.ChatEvent;
-import fi.harism.lucidchat.service.ChatEventList;
+import fi.harism.lucidchat.IServiceCallback;
+import fi.harism.lucidchat.ChatEvent;
+import fi.harism.lucidchat.ChatEventList;
 
 interface IService {
 	void connect(in String nick, in String host, in int port);
