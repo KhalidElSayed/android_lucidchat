@@ -5,8 +5,6 @@ import android.os.Parcelable;
 
 public class ChatEvent implements Parcelable {
 
-	public static final String CMD_CONNECT = "SERVER_CONNECT";
-	public static final String CMD_DISCONNECT = "SERVER_DISCONNECT";
 	public static final String CMD_EXCEPTION = "SERVER_EXCEPTION";
 
 	public static final Parcelable.Creator<ChatEvent> CREATOR = new Parcelable.Creator<ChatEvent>() {

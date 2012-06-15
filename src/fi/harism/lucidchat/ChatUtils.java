@@ -13,13 +13,14 @@ public final class ChatUtils {
 	private static final int COLOR_ERROR = 0xFFE26E9B;
 	private static final int COLOR_LINK = 0xFFAACB63;
 	private static final int COLOR_MESSAGE = 0xFFD0D0D0;
+	private static final int COLOR_NOTICE = 0xFFB0B0B0;
 	private static final int COLOR_SERVER = 0xFF63CB63;
 	private static final int COLOR_TIME = 0xFF4CBAED;
 
 	private static final Calendar mCalendar = Calendar.getInstance();
 
-	public static String concatParams(String[] parts, int first, int last) {
-		boolean stripColon = true;
+	public static String concat(String[] parts, int first, int last,
+			boolean stripColon) {
 		StringWriter out = new StringWriter();
 		for (int i = first; i <= last; ++i) {
 			if (i > first) {
@@ -49,6 +50,9 @@ public final class ChatUtils {
 		if (event.mCommand.equals("PRIVMSG")) {
 			color = COLOR_MESSAGE;
 		}
+		if (event.mCommand.equals("NOTICE")) {
+			color = COLOR_NOTICE;
+		}
 		if (event.mCommand.equals(ChatEvent.CMD_EXCEPTION)) {
 			color = COLOR_ERROR;
 		}
@@ -74,13 +78,13 @@ public final class ChatUtils {
 		return span;
 	}
 
-	public static ChatEvent parseEvent(String message) {
+	public static ChatEvent getEvent(String message) {
 		ChatEvent event = new ChatEvent();
 
 		int idx = 0;
 		String parts[] = message.split(" ");
 		if (parts[idx].startsWith(":")) {
-			event.mFrom = parseFrom(parts[idx++]);
+			event.mFrom = getFrom(parts[idx++]);
 		}
 
 		event.mCommand = parts[idx++].toUpperCase();
@@ -88,12 +92,20 @@ public final class ChatUtils {
 			event.mTo = parts[idx++];
 		}
 
-		event.mMessage = concatParams(parts, idx, parts.length - 1);
+		int cmd = -1;
+		if (Character.isDigit(event.mCommand.charAt(0))) {
+			cmd = Integer.parseInt(event.mCommand);
+		}
+		if (cmd == 432 || cmd == 433 || cmd == 436 || cmd == 437) {
+			event.mMessage = concat(parts, idx + 1, parts.length - 1, true);
+		} else {
+			event.mMessage = concat(parts, idx, parts.length - 1, true);
+		}
 
 		return event;
 	}
 
-	public static String parseFrom(String from) {
+	public static String getFrom(String from) {
 		if (from.charAt(0) != ':') {
 			return from;
 		}
@@ -104,6 +116,37 @@ public final class ChatUtils {
 		}
 
 		return from.substring(1, endIdx);
+	}
+
+	public static boolean setEvent(ChatEvent event, String text) {
+		event.mFrom = event.mCommand = event.mTo = event.mMessage = null;
+
+		text = text.trim();
+		String parts[] = text.split(" ");
+		if (parts.length >= 1) {
+			parts[0] = parts[0].toUpperCase();
+		}
+		if (parts.length >= 2) {
+			if (parts[0].equals("/JOIN")) {
+				event.mCommand = "JOIN";
+				event.mTo = parts[1];
+			}
+		}
+		if (parts.length >= 3) {
+			if (parts[0].equals("/MSG")) {
+				event.mCommand = "PRIVMSG";
+				event.mTo = parts[1];
+				event.mMessage = concat(parts, 2, parts.length - 1, false);
+			}
+			if (parts[0].equals("/ME")) {
+				event.mCommand = "PRIVMSG";
+				event.mTo = parts[1];
+				event.mMessage = ":" + (char) 0x01 + "ACTION "
+						+ concat(parts, 2, parts.length - 1, false);
+			}
+		}
+
+		return event.mCommand != null;
 	}
 
 }

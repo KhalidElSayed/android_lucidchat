@@ -42,7 +42,7 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public void onChatMessage(String host, String message) {
 		Log.d("onChatMessage", message);
-		ChatEvent event = ChatUtils.parseEvent(message);
+		ChatEvent event = ChatUtils.getEvent(message);
 		if (event.mCommand.equals("PING")) {
 			try {
 				mChatRunnable.send("PONG " + event.mMessage);
@@ -65,8 +65,10 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public void onDestroy() {
 		Toast.makeText(this, "Service onDestroy.", Toast.LENGTH_SHORT).show();
-		mChatRunnable.disconnect();
-		mChatThread = null;
+		if (mChatRunnable != null) {
+			mChatRunnable.disconnect();
+			mChatThread = null;
+		}
 		stopForeground(true);
 	}
 
