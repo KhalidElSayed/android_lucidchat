@@ -85,7 +85,9 @@ public class ChatService extends Service implements ChatObserver {
 
 	private void postChatEvent(ChatEvent event) {
 		try {
-			mCallback.onChatEvent(event);
+			if (mCallback != null) {
+				mCallback.onChatEvent(event);
+			}
 			if (mEventMap.get(null) == null) {
 				mEventMap.put(null, new Vector<ChatEvent>());
 			}
