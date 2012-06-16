@@ -7,18 +7,18 @@
 
     <include layout="@layout/root_footer" />
 
-    <ScrollView
+    <fi.harism.lucidchat.ChatScrollView
         android:id="@+id/scroll"
         style="@style/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
         <LinearLayout
-            android:id="@+id/chat"
+            android:id="@+id/scroll_list"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
-    </ScrollView>
+    </fi.harism.lucidchat.ChatScrollView>
 
     <include layout="@layout/menu_main" />
 

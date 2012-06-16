@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -19,7 +18,6 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
-import android.widget.ScrollView;
 import android.widget.Toast;
 
 public class ChatActivity extends Activity implements ServiceConnection,
@@ -75,21 +73,12 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			}
 		}
 
-		ViewGroup chat = (ViewGroup) findViewById(R.id.chat);
-		ChatTextView ctv = (ChatTextView) getLayoutInflater().inflate(
+		ChatTextView cTextView = (ChatTextView) getLayoutInflater().inflate(
 				R.layout.chat_textview, null);
-		ctv.setChatEvent(event);
-		chat.addView(ctv);
+		cTextView.setChatEvent(event);
 
-		final ScrollView sv = (ScrollView) findViewById(R.id.scroll);
-		if (sv.getScrollY() + sv.getHeight() >= chat.getBottom() - 2) {
-			sv.post(new Runnable() {
-				@Override
-				public void run() {
-					sv.fullScroll(View.FOCUS_DOWN);
-				}
-			});
-		}
+		ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.scroll);
+		cScrollView.addView(cTextView);
 	}
 
 	@Override
