@@ -21,15 +21,15 @@ public final class ChatUtils {
 		return out.toString();
 	}
 
-	public static int getCommandInt(ChatEvent event) {
+	public static int getCommandInt(ChatMessage event) {
 		if (Character.isDigit(event.mCommand.charAt(0))) {
 			return Integer.parseInt(event.mCommand);
 		}
 		return -1;
 	}
 
-	public static ChatEvent getEvent(String message) {
-		ChatEvent event = new ChatEvent();
+	public static ChatMessage getEvent(String message) {
+		ChatMessage event = new ChatMessage();
 
 		int idx = 0;
 		String parts[] = message.split(" ");
@@ -72,7 +72,7 @@ public final class ChatUtils {
 		return from.substring(1, endIdx);
 	}
 
-	public static boolean setEvent(ChatEvent event, String text) {
+	public static boolean setEvent(ChatMessage event, String text) {
 		event.mFrom = event.mCommand = event.mTo = event.mMessage = null;
 
 		text = text.trim();

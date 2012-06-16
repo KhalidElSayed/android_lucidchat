@@ -38,10 +38,6 @@ public class ChatRunnable implements Runnable {
 		mHostPort = port;
 	}
 
-	public boolean isConnected() {
-		return mKeepRunning;
-	}
-
 	@Override
 	public void run() {
 		mKeepRunning = true;
@@ -61,6 +57,8 @@ public class ChatRunnable implements Runnable {
 				send("NICK " + mNick);
 				send("USER " + mNick + " 0 * " + mNick);
 
+				mObserver.onChatConnected(true);
+
 				String msg;
 				while (mKeepRunning && (msg = reader.readLine()) != null) {
 					mObserver.onChatMessage(mHost, msg);
@@ -74,6 +72,8 @@ public class ChatRunnable implements Runnable {
 				mWriter = null;
 				mObserver.onChatError(mHost, ex.getMessage());
 			}
+
+			mObserver.onChatConnected(false);
 
 			if (mKeepRunning) {
 				try {

@@ -44,9 +44,9 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		return false;
 	}
 
-	private void onChatEvent(ChatEvent event) {
+	private void onChatEvent(ChatMessage msg) {
 		if (mDlgLogin != null) {
-			int cmd = ChatUtils.getCommandInt(event);
+			int cmd = ChatUtils.getCommandInt(msg);
 			if (cmd == 1) {
 				setSendEnabled(true);
 				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
@@ -63,7 +63,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			} else if (cmd >= 400 && cmd < 600) {
 				mDlgError = new ChatDlgError(this);
 				mDlgError.setOnClickListener(this);
-				mDlgError.setMessage(event.mMessage);
+				mDlgError.setMessage(msg.mMessage);
 				mDlgError.show();
 				try {
 					mService.disconnect();
@@ -75,7 +75,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 		ChatTextView cTextView = (ChatTextView) getLayoutInflater().inflate(
 				R.layout.chat_textview, null);
-		cTextView.setChatEvent(event);
+		cTextView.setChatEvent(msg);
 
 		ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.scroll);
 		cScrollView.addView(cTextView);
@@ -89,7 +89,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			String txt = edit.getText().toString().trim();
 			if (txt.length() > 0) {
 				try {
-					ChatEvent event = new ChatEvent();
+					ChatMessage event = new ChatMessage();
 					if (!ChatUtils.setEvent(event, txt)) {
 						event.mCommand = txt;
 					}
@@ -236,7 +236,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		mService = IService.Stub.asInterface(binder);
 		try {
 			if (mService.isConnected()) {
-				ChatEventList events = mService.getEvents(null);
+				ChatMessageList events = mService.getMessages(null);
 				for (int i = 0; i < events.getSize(); ++i) {
 					onChatEvent(events.get(i));
 				}
@@ -317,13 +317,19 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	private final class ClientBinder extends IServiceCallback.Stub {
 
 		@Override
-		public void onChatEvent(final ChatEvent event) throws RemoteException {
+		public void onChatEvent(final ChatMessage message)
+				throws RemoteException {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					ChatActivity.this.onChatEvent(event);
+					ChatActivity.this.onChatEvent(message);
 				}
 			});
+		}
+
+		@Override
+		public void onConnected(boolean connected) throws RemoteException {
+			setSendEnabled(connected);
 		}
 
 	}

@@ -1,7 +1,8 @@
 package fi.harism.lucidchat;
 
-import fi.harism.lucidchat.ChatEvent;
+import fi.harism.lucidchat.ChatMessage;
 
 interface IServiceCallback {
-	void onChatEvent(in ChatEvent event);
+	void onChatEvent(in ChatMessage message);
+	void onConnected(in boolean connected);
 }

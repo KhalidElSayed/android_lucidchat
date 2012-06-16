@@ -1,2 +1,3 @@
 package fi.harism.lucidchat;
-parcelable ChatEvent;
+
+parcelable ChatMessageList;

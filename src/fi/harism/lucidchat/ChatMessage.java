@@ -3,30 +3,30 @@ package fi.harism.lucidchat;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class ChatEvent implements Parcelable {
+public class ChatMessage implements Parcelable {
 
 	public static final String CMD_EXCEPTION = "SERVER_EXCEPTION";
 
-	public static final Parcelable.Creator<ChatEvent> CREATOR = new Parcelable.Creator<ChatEvent>() {
+	public static final Parcelable.Creator<ChatMessage> CREATOR = new Parcelable.Creator<ChatMessage>() {
 		@Override
-		public ChatEvent createFromParcel(Parcel in) {
-			return new ChatEvent(in);
+		public ChatMessage createFromParcel(Parcel in) {
+			return new ChatMessage(in);
 		}
 
 		@Override
-		public ChatEvent[] newArray(int size) {
-			return new ChatEvent[size];
+		public ChatMessage[] newArray(int size) {
+			return new ChatMessage[size];
 		}
 	};
 
 	public String mFrom, mTo, mCommand, mMessage;
 	public long mTime;
 
-	public ChatEvent() {
+	public ChatMessage() {
 		mTime = System.currentTimeMillis();
 	}
 
-	private ChatEvent(Parcel in) {
+	private ChatMessage(Parcel in) {
 		mFrom = in.readString();
 		mCommand = in.readString();
 		mTo = in.readString();

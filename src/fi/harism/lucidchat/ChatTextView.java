@@ -36,7 +36,7 @@ public class ChatTextView extends TextView {
 		super(context, attrs, defStyle);
 	}
 
-	private SpannableString getNick(ChatEvent event) {
+	private SpannableString getNick(ChatMessage event) {
 		String from = "";
 		if (ChatUtils.getCommandInt(event) < 0
 				&& event.mCommand.equals("PRIVMSG")) {
@@ -52,7 +52,7 @@ public class ChatTextView extends TextView {
 		return span;
 	}
 
-	private SpannableString getText(ChatEvent event) {
+	private SpannableString getText(ChatMessage event) {
 		int color = COLOR_SERVER;
 		if (event.mCommand.equals("PRIVMSG")) {
 			color = COLOR_MESSAGE;
@@ -60,7 +60,7 @@ public class ChatTextView extends TextView {
 		if (event.mCommand.equals("NOTICE")) {
 			color = COLOR_NOTICE;
 		}
-		if (event.mCommand.equals(ChatEvent.CMD_EXCEPTION)) {
+		if (event.mCommand.equals(ChatMessage.CMD_EXCEPTION)) {
 			color = COLOR_ERROR;
 		}
 		if (ChatUtils.getCommandInt(event) >= 400
@@ -99,7 +99,7 @@ public class ChatTextView extends TextView {
 		return span;
 	}
 
-	public void setChatEvent(ChatEvent event) {
+	public void setChatEvent(ChatMessage event) {
 		mSpanBuilder.clear();
 		mSpanBuilder.append(getTime(event.mTime));
 		mSpanBuilder.append(getNick(event));

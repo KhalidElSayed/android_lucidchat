@@ -20,7 +20,8 @@ public class ChatService extends Service implements ChatObserver {
 	private IServiceCallback mCallback;
 	private ChatRunnable mChatRunnable;
 	private Thread mChatThread;
-	private final HashMap<String, Vector<ChatEvent>> mEventMap = new HashMap<String, Vector<ChatEvent>>();
+	private boolean mConnected;
+	private final HashMap<String, Vector<ChatMessage>> mMessageMap = new HashMap<String, Vector<ChatMessage>>();
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -28,11 +29,23 @@ public class ChatService extends Service implements ChatObserver {
 	}
 
 	@Override
+	public void onChatConnected(boolean connected) {
+		mConnected = connected;
+		try {
+			if (mCallback != null) {
+				mCallback.onConnected(connected);
+			}
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
 	public void onChatError(String host, String reason) {
 		if (mCallback != null) {
-			ChatEvent event = new ChatEvent();
+			ChatMessage event = new ChatMessage();
 			event.mMessage = reason;
-			event.mCommand = ChatEvent.CMD_EXCEPTION;
+			event.mCommand = ChatMessage.CMD_EXCEPTION;
 			event.mFrom = host;
 			postChatEvent(event);
 			mChatThread = null;
@@ -42,18 +55,18 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public void onChatMessage(String host, String message) {
 		Log.d("onChatMessage", message);
-		ChatEvent event = ChatUtils.getEvent(message);
-		if (event.mCommand.equals("PING")) {
+		ChatMessage msg = ChatUtils.getEvent(message);
+		if (msg.mCommand.equals("PING")) {
 			try {
-				mChatRunnable.send("PONG " + event.mMessage);
+				mChatRunnable.send("PONG " + msg.mMessage);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else {
-			if (event.mFrom == null) {
-				event.mFrom = host;
+			if (msg.mFrom == null) {
+				msg.mFrom = host;
 			}
-			postChatEvent(event);
+			postChatEvent(msg);
 		}
 	}
 
@@ -83,15 +96,15 @@ public class ChatService extends Service implements ChatObserver {
 		return super.onUnbind(intent);
 	}
 
-	private void postChatEvent(ChatEvent event) {
+	private void postChatEvent(ChatMessage message) {
 		try {
 			if (mCallback != null) {
-				mCallback.onChatEvent(event);
+				mCallback.onChatEvent(message);
 			}
-			if (mEventMap.get(null) == null) {
-				mEventMap.put(null, new Vector<ChatEvent>());
+			if (mMessageMap.get(null) == null) {
+				mMessageMap.put(null, new Vector<ChatMessage>());
 			}
-			mEventMap.get(null).add(event);
+			mMessageMap.get(null).add(message);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -133,38 +146,38 @@ public class ChatService extends Service implements ChatObserver {
 		}
 
 		@Override
-		public ChatEventList getEvents(String id) throws RemoteException {
-			Vector<ChatEvent> events = mEventMap.get(id);
+		public ChatMessageList getMessages(String id) throws RemoteException {
+			Vector<ChatMessage> events = mMessageMap.get(id);
 			if (events != null) {
-				return new ChatEventList(events);
+				return new ChatMessageList(events);
 			}
-			return new ChatEventList(new Vector<ChatEvent>());
+			return new ChatMessageList(new Vector<ChatMessage>());
 		}
 
 		@Override
 		public boolean isConnected() throws RemoteException {
-			return mChatRunnable != null && mChatRunnable.isConnected();
+			return mConnected;
 		}
 
 		@Override
-		public void sendEvent(ChatEvent event) throws RemoteException {
+		public void sendEvent(ChatMessage message) throws RemoteException {
 			try {
-				event.mCommand = event.mCommand.toUpperCase();
+				message.mCommand = message.mCommand.toUpperCase();
 				StringWriter out = new StringWriter();
-				out.write(event.mCommand);
-				if (event.mTo != null) {
+				out.write(message.mCommand);
+				if (message.mTo != null) {
 					out.write(' ');
-					out.write(event.mTo);
+					out.write(message.mTo);
 				}
-				if (event.mMessage != null) {
+				if (message.mMessage != null) {
 					out.write(' ');
-					out.write(event.mMessage);
+					out.write(message.mMessage);
 				}
 				Log.d("sendEvent", out.toString());
 				mChatRunnable.send(out.toString());
 
-				if (event.mCommand.equals("PRIVMSG")) {
-					postChatEvent(event);
+				if (message.mCommand.equals("PRIVMSG")) {
+					postChatEvent(message);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
