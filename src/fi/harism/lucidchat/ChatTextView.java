@@ -41,9 +41,9 @@ public class ChatTextView extends TextView {
 		if (ChatUtils.getCommandInt(event) < 0
 				&& event.mCommand.equals("PRIVMSG")) {
 			if (event.mMessage.startsWith("\u0001ACTION ")) {
-				from = "* " + from;
+				from = "* " + event.mFrom + " ";
 			} else {
-				from = event.mFrom + ":";
+				from = event.mFrom + ": ";
 			}
 		}
 
@@ -69,7 +69,7 @@ public class ChatTextView extends TextView {
 		}
 
 		SpannableString span;
-		if (event.mMessage.startsWith("\u001ACTION ")) {
+		if (event.mMessage.startsWith("\u0001ACTION ")) {
 			span = new SpannableString(event.mMessage.substring(8));
 			color = COLOR_NOTICE;
 		} else {
