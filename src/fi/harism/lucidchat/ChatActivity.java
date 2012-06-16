@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.text.method.LinkMovementMethod;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +20,6 @@ import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
 import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
 public class ChatActivity extends Activity implements ServiceConnection,
@@ -51,7 +48,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	private void onChatEvent(ChatEvent event) {
 		if (mDlgLogin != null) {
-			int cmd = ChatUtils.getCommand(event);
+			int cmd = ChatUtils.getCommandInt(event);
 			if (cmd == 1) {
 				setSendEnabled(true);
 				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
@@ -79,14 +76,10 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		}
 
 		ViewGroup chat = (ViewGroup) findViewById(R.id.chat);
-
-		TextView tv = (TextView) getLayoutInflater().inflate(
+		ChatTextView ctv = (ChatTextView) getLayoutInflater().inflate(
 				R.layout.chat_textview, null);
-
-		tv.setMovementMethod(LinkMovementMethod.getInstance());
-		tv.setText(ChatUtils.createSpannable(event), BufferType.SPANNABLE);
-
-		chat.addView(tv);
+		ctv.setChatEvent(event);
+		chat.addView(ctv);
 
 		final ScrollView sv = (ScrollView) findViewById(R.id.scroll);
 		if (sv.getScrollY() + sv.getHeight() >= chat.getBottom() - 2) {
