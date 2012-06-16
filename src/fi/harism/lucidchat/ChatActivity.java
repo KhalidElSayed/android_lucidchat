@@ -9,14 +9,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationSet;
-import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -35,51 +30,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	private ChatDlgError mDlgError;
 	private ChatDlgLogin mDlgLogin;
 	private IService mService;
-
-	private boolean isMenuVisible(int menuId) {
-		View v = findViewById(menuId);
-		if (v.getVisibility() == View.VISIBLE) {
-			return true;
-		}
-		return false;
-	}
-
-	private void onChatEvent(ChatMessage msg) {
-		if (mDlgLogin != null) {
-			int cmd = ChatUtils.getCommandInt(msg);
-			if (cmd == 1) {
-				setSendEnabled(true);
-				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
-						.edit();
-				prefs.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
-				prefs.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
-				prefs.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
-				prefs.commit();
-
-				mDlgLogin.dismiss();
-				mDlgLogin = null;
-
-				setSendEnabled(true);
-			} else if (cmd >= 400 && cmd < 600) {
-				mDlgError = new ChatDlgError(this);
-				mDlgError.setOnClickListener(this);
-				mDlgError.setMessage(msg.mMessage);
-				mDlgError.show();
-				try {
-					mService.disconnect();
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		ChatTextView cTextView = (ChatTextView) getLayoutInflater().inflate(
-				R.layout.chat_textview, null);
-		cTextView.setChatEvent(msg);
-
-		ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.scroll);
-		cScrollView.addView(cTextView);
-	}
 
 	@Override
 	public void onClick(View view) {
@@ -101,31 +51,24 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			}
 			break;
 		}
-		case R.id.menu: {
-			setMenuVisible(R.id.menu_main, !isMenuVisible(R.id.menu_main));
-			break;
-		}
-		case R.id.connect: {
-			mDlgLogin = new ChatDlgLogin(this);
-			mDlgLogin.setOnClickListener(this);
+		case R.id.root_header_connect: {
+			View v = findViewById(R.id.root_header_connect);
+			if (v.getTag() == null || (Boolean) v.getTag() == false) {
+				mDlgLogin = new ChatDlgLogin(this);
+				mDlgLogin.setOnClickListener(this);
 
-			SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-			mDlgLogin.setNick(prefs.getString(KEY_DLGLOGIN_NICK, ""));
-			mDlgLogin.setHost(prefs.getString(KEY_DLGLOGIN_HOST, ""));
-			mDlgLogin.setPort(prefs.getInt(KEY_DLGLOGIN_PORT, -1));
+				SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+				mDlgLogin.setNick(prefs.getString(KEY_DLGLOGIN_NICK, ""));
+				mDlgLogin.setHost(prefs.getString(KEY_DLGLOGIN_HOST, ""));
+				mDlgLogin.setPort(prefs.getInt(KEY_DLGLOGIN_PORT, -1));
 
-			mDlgLogin.show();
-
-			setMenuVisible(R.id.menu_main, false);
-			break;
-		}
-		case R.id.disconnect: {
-			setSendEnabled(false);
-			try {
-				mService.disconnect();
-				setMenuVisible(R.id.menu_main, false);
-			} catch (RemoteException e) {
-				e.printStackTrace();
+				mDlgLogin.show();
+			} else {
+				try {
+					mService.disconnect();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 			}
 			break;
 		}
@@ -135,10 +78,13 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			break;
 		}
 		case R.id.dlg_login_login: {
+			Intent intent = new Intent(this, ChatService.class);
 			try {
+				startService(intent);
 				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
 						mDlgLogin.getPort());
 			} catch (RemoteException e) {
+				stopService(intent);
 				e.printStackTrace();
 			}
 			break;
@@ -157,9 +103,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.root);
 
-		findViewById(R.id.menu).setOnClickListener(this);
-		findViewById(R.id.connect).setOnClickListener(this);
-		findViewById(R.id.disconnect).setOnClickListener(this);
+		findViewById(R.id.root_header_connect).setOnClickListener(this);
 
 		View v = findViewById(R.id.send);
 		v.setOnClickListener(this);
@@ -170,28 +114,15 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		v.setFocusable(false);
 
 		Intent intent = new Intent(this, ChatService.class);
-		startService(intent);
 		bindService(intent, this, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		unbindService(this);
-	}
-
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			if (isMenuVisible(R.id.menu_main)) {
-				setMenuVisible(R.id.menu_main, false);
-				return true;
-			} else {
-				Intent intent = new Intent(this, ChatService.class);
-				stopService(intent);
-			}
+		if (mService != null) {
+			unbindService(this);
 		}
-		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -235,16 +166,21 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 		mService = IService.Stub.asInterface(binder);
 		try {
-			if (mService.isConnected()) {
-				ChatMessageList events = mService.getMessages(null);
-				for (int i = 0; i < events.getSize(); ++i) {
-					onChatEvent(events.get(i));
-				}
-				setSendEnabled(true);
-			} else {
-				setSendEnabled(false);
-			}
 			mService.setCallback(mClient);
+			if (mService.isConnected()) {
+				ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.root_scroll);
+				ChatMessageList list = mService.getMessages(null);
+				for (ChatMessage message : list.getMessages()) {
+					ChatTextView cTextView = (ChatTextView) getLayoutInflater()
+							.inflate(R.layout.chat_textview, null);
+					cTextView.setChatEvent(message);
+					cScrollView.addView(cTextView);
+				}
+				setConnected(true);
+			} else if (mDlgLogin != null) {
+				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
+						mDlgLogin.getPort());
+			}
 		} catch (RemoteException ex) {
 			ex.printStackTrace();
 		}
@@ -254,82 +190,99 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	public void onServiceDisconnected(ComponentName name) {
 		Toast.makeText(this, "Client onServiceDisconnected.",
 				Toast.LENGTH_SHORT).show();
-		try {
-			if (mService != null) {
-				mService.setCallback(null);
-			}
-		} catch (RemoteException ex) {
-			ex.printStackTrace();
-		}
+		mService = null;
 	}
 
-	private void setMenuVisible(int menuId, boolean visible) {
-		final View v = findViewById(menuId);
-		if (visible) {
-			AnimationSet anim = new AnimationSet(true);
-			anim.addAnimation(new AlphaAnimation(0, 1));
-			anim.addAnimation(new TranslateAnimation(
-					Animation.RELATIVE_TO_SELF, -1, Animation.RELATIVE_TO_SELF,
-					0, Animation.RELATIVE_TO_SELF, 0,
-					Animation.RELATIVE_TO_SELF, 0));
-			anim.setDuration(500);
-			v.setAnimation(anim);
-			v.setVisibility(View.VISIBLE);
-			anim.startNow();
-			v.invalidate();
-		} else {
-			AnimationSet anim = new AnimationSet(true);
-			anim.addAnimation(new AlphaAnimation(1, 0));
-			anim.addAnimation(new TranslateAnimation(
-					Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF,
-					-1, Animation.RELATIVE_TO_SELF, 0,
-					Animation.RELATIVE_TO_SELF, 0));
-			anim.setDuration(500);
-			anim.setAnimationListener(new AnimationListener() {
-				@Override
-				public void onAnimationEnd(Animation anim) {
-					v.setVisibility(View.GONE);
-				}
-
-				@Override
-				public void onAnimationRepeat(Animation anim) {
-				}
-
-				@Override
-				public void onAnimationStart(Animation anim) {
-				}
-			});
-			v.setAnimation(anim);
-			anim.startNow();
-			v.invalidate();
-		}
-	}
-
-	private void setSendEnabled(boolean enabled) {
+	private void setConnected(boolean connected) {
 		View v = findViewById(R.id.send);
-		v.setEnabled(enabled);
+		v.setEnabled(connected);
 
 		v = findViewById(R.id.edit);
-		v.setEnabled(enabled);
-		v.setFocusableInTouchMode(enabled);
+		v.setEnabled(connected);
+		v.setFocusableInTouchMode(connected);
+
+		Button connect = (Button) findViewById(R.id.root_header_connect);
+		if (connected) {
+			connect.setText("Disconnect");
+			connect.setTag(true);
+		} else {
+			connect.setText("Connect");
+			connect.setTag(false);
+		}
 	}
 
 	private final class ClientBinder extends IServiceCallback.Stub {
 
 		@Override
-		public void onChatEvent(final ChatMessage message)
+		public void onChatMessage(final ChatMessage message)
 				throws RemoteException {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					ChatActivity.this.onChatEvent(message);
+					onChatMessageImpl(message);
 				}
 			});
 		}
 
+		private void onChatMessageImpl(ChatMessage msg) {
+			if (mDlgLogin != null) {
+				int cmd = ChatUtils.getCommandInt(msg);
+				if (cmd == 1) {
+					setConnected(true);
+					SharedPreferences.Editor prefs = getPreferences(
+							MODE_PRIVATE).edit();
+					prefs.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
+					prefs.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
+					prefs.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
+					prefs.commit();
+
+					mDlgLogin.dismiss();
+					mDlgLogin = null;
+				} else if (cmd >= 400 && cmd < 600) {
+					mDlgError = new ChatDlgError(ChatActivity.this);
+					mDlgError.setOnClickListener(ChatActivity.this);
+					mDlgError.setMessage(msg.mMessage);
+					mDlgError.show();
+					try {
+						mService.disconnect();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
+					.inflate(R.layout.chat_textview, null);
+			cTextView.setChatEvent(msg);
+
+			ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.root_scroll);
+			cScrollView.addView(cTextView);
+		}
+
 		@Override
-		public void onConnected(boolean connected) throws RemoteException {
-			setSendEnabled(connected);
+		public void onConnected(final boolean connected) throws RemoteException {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onConnectedImpl(connected);
+				}
+			});
+		}
+
+		private void onConnectedImpl(boolean connected) {
+			try {
+				if (!mService.isConnected()) {
+					connected = false;
+					Intent intent = new Intent(ChatActivity.this,
+							ChatService.class);
+					stopService(intent);
+					// unbindService(ChatActivity.this);
+					// mService = null;
+				}
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			setConnected(connected);
 		}
 
 	}

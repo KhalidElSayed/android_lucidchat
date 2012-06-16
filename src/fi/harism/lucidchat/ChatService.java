@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.widget.Toast;
 
 public class ChatService extends Service implements ChatObserver {
 
@@ -20,7 +19,6 @@ public class ChatService extends Service implements ChatObserver {
 	private IServiceCallback mCallback;
 	private ChatRunnable mChatRunnable;
 	private Thread mChatThread;
-	private boolean mConnected;
 	private final HashMap<String, Vector<ChatMessage>> mMessageMap = new HashMap<String, Vector<ChatMessage>>();
 
 	@Override
@@ -30,7 +28,6 @@ public class ChatService extends Service implements ChatObserver {
 
 	@Override
 	public void onChatConnected(boolean connected) {
-		mConnected = connected;
 		try {
 			if (mCallback != null) {
 				mCallback.onConnected(connected);
@@ -71,13 +68,8 @@ public class ChatService extends Service implements ChatObserver {
 	}
 
 	@Override
-	public void onCreate() {
-		Toast.makeText(this, "Service onCreate.", Toast.LENGTH_SHORT).show();
-	}
-
-	@Override
 	public void onDestroy() {
-		Toast.makeText(this, "Service onDestroy.", Toast.LENGTH_SHORT).show();
+		super.onDestroy();
 		if (mChatRunnable != null) {
 			mChatRunnable.disconnect();
 			mChatThread = null;
@@ -93,13 +85,13 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public boolean onUnbind(Intent intent) {
 		mCallback = null;
-		return super.onUnbind(intent);
+		return false;
 	}
 
 	private void postChatEvent(ChatMessage message) {
 		try {
 			if (mCallback != null) {
-				mCallback.onChatEvent(message);
+				mCallback.onChatMessage(message);
 			}
 			if (mMessageMap.get(null) == null) {
 				mMessageMap.put(null, new Vector<ChatMessage>());
@@ -138,6 +130,7 @@ public class ChatService extends Service implements ChatObserver {
 
 		@Override
 		public void disconnect() throws RemoteException {
+			Log.d("disconnect()", "disconnect()");
 			if (mChatThread != null) {
 				mChatRunnable.disconnect();
 				mChatThread = null;
@@ -156,7 +149,7 @@ public class ChatService extends Service implements ChatObserver {
 
 		@Override
 		public boolean isConnected() throws RemoteException {
-			return mConnected;
+			return mChatThread != null && mChatThread.isAlive();
 		}
 
 		@Override

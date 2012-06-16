@@ -24,7 +24,7 @@ public class ChatScrollView extends ScrollView {
 
 	@Override
 	public void addView(View view) {
-		ViewGroup listView = (ViewGroup) findViewById(R.id.scroll_list);
+		ViewGroup listView = (ViewGroup) findViewById(R.id.root_scroll_list);
 		listView.addView(view);
 		if (getScrollY() + getHeight() >= view.getBottom() - 2) {
 			post(mScrollDownRunnable);
@@ -33,7 +33,7 @@ public class ChatScrollView extends ScrollView {
 
 	@Override
 	public void removeAllViews() {
-		ViewGroup listView = (ViewGroup) findViewById(R.id.scroll_list);
+		ViewGroup listView = (ViewGroup) findViewById(R.id.root_scroll_list);
 		listView.removeAllViews();
 	}
 

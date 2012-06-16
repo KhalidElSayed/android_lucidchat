@@ -1,5 +1,6 @@
 package fi.harism.lucidchat;
 
+import java.util.List;
 import java.util.Vector;
 
 import android.os.Parcel;
@@ -35,12 +36,8 @@ public class ChatMessageList implements Parcelable {
 		return 0;
 	}
 
-	public ChatMessage get(int index) {
-		return mEvents.get(index);
-	}
-
-	public int getSize() {
-		return mEvents.size();
+	public List<ChatMessage> getMessages() {
+		return mEvents;
 	}
 
 	@Override
