@@ -14,10 +14,10 @@ public final class ChatUtils {
 	private static final int COLOR_ERROR = 0xFFE26E9B;
 	private static final int COLOR_LINK = 0xFFAACB63;
 	private static final int COLOR_MESSAGE = 0xFFD0D0D0;
-	private static final int COLOR_NICK = 0xFFaecaea;
+	private static final int COLOR_NICK = 0xFF7ba6d8;
 	private static final int COLOR_NOTICE = 0xFFB0B0B0;
 	private static final int COLOR_SERVER = 0xFF63CB63;
-	private static final int COLOR_TIME = 0xFF4CBAED;
+	private static final int COLOR_TIME = 0xFF3e97c1;
 
 	private static final Calendar mCalendar = Calendar.getInstance();
 
