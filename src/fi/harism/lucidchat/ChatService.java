@@ -3,7 +3,6 @@ package fi.harism.lucidchat;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.Vector;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -19,7 +18,7 @@ public class ChatService extends Service implements ChatObserver {
 	private IServiceCallback mCallback;
 	private ChatRunnable mChatRunnable;
 	private Thread mChatThread;
-	private final HashMap<String, Vector<ChatMessage>> mMessageMap = new HashMap<String, Vector<ChatMessage>>();
+	private final HashMap<String, ChatConversation> mConversationMap = new HashMap<String, ChatConversation>();
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -93,10 +92,10 @@ public class ChatService extends Service implements ChatObserver {
 			if (mCallback != null) {
 				mCallback.onChatMessage(message);
 			}
-			if (mMessageMap.get(null) == null) {
-				mMessageMap.put(null, new Vector<ChatMessage>());
+			if (mConversationMap.get("") == null) {
+				mConversationMap.put("", new ChatConversation());
 			}
-			mMessageMap.get(null).add(message);
+			mConversationMap.get("").addMessage(message);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -138,12 +137,15 @@ public class ChatService extends Service implements ChatObserver {
 		}
 
 		@Override
-		public ChatMessageList getMessages(String id) throws RemoteException {
-			Vector<ChatMessage> events = mMessageMap.get(id);
-			if (events != null) {
-				return new ChatMessageList(events);
+		public ChatConversation getConversation(String id)
+				throws RemoteException {
+			if (id == null) {
+				id = "";
 			}
-			return new ChatMessageList(new Vector<ChatMessage>());
+			if (!mConversationMap.containsKey(id)) {
+				mConversationMap.put(id, new ChatConversation());
+			}
+			return mConversationMap.get(id);
 		}
 
 		@Override

@@ -27,9 +27,8 @@ public class ChatRunnable implements Runnable {
 	public void disconnect() {
 		mKeepRunning = false;
 		try {
-			if (mWriter != null) {
-				send("QUIT");
-			} else if (mSocket != null) {
+			send("QUIT");
+			if (mSocket != null) {
 				mSocket.close();
 			}
 		} catch (IOException e) {

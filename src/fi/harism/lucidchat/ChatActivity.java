@@ -178,8 +178,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			mService.setCallback(mClient);
 			if (mService.isConnected()) {
 				ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.root_scroll);
-				ChatMessageList list = mService.getMessages(null);
-				for (ChatMessage message : list.getMessages()) {
+				ChatConversation conversation = mService.getConversation(null);
+				for (ChatMessage message : conversation.getMessages()) {
 					ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 							.inflate(R.layout.chat_textview, null);
 					cTextView.setChatEvent(message);
