@@ -38,11 +38,37 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			String txt = edit.getText().toString().trim();
 			if (txt.length() > 0) {
 				try {
-					ChatMessage event = new ChatMessage();
-					if (!ChatUtils.setEvent(event, txt)) {
-						event.mCommand = txt;
+					String txtUpper = txt.toUpperCase();
+					if (txtUpper.startsWith("/JOIN ")) {
+						txt = "JOIN " + txt.substring(5).trim();
+						if (txt.trim().length() == 4) {
+							txt = "";
+						}
 					}
-					mService.sendEvent(event);
+					if (txtUpper.startsWith("/MSG ")) {
+						String cmd = "PRIVMSG ";
+						String to = txt.substring(4).trim();
+						int spaceIdx = to.indexOf(' ');
+						if (spaceIdx > 0) {
+							String msg = to.substring(spaceIdx + 1);
+							if (msg.length() > 0) {
+								to = to.substring(0, spaceIdx + 1);
+								txt = cmd + to + ":" + msg;
+							} else {
+								txt = "";
+							}
+						} else {
+							txt = "";
+						}
+					}
+					if (txtUpper.startsWith("/ME ")) {
+						txt = "PRIVMSG harism :" + "\u0001ACTION "
+								+ txt.substring(4);
+					}
+
+					if (txt.length() > 0) {
+						mService.sendMessage(txt);
+					}
 					edit.setText("");
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -231,32 +257,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		}
 
 		private void onChatMessageImpl(ChatMessage msg) {
-			if (mDlgLogin != null) {
-				int cmd = ChatUtils.getCommandInt(msg);
-				if (cmd == 1) {
-					setConnected(true);
-					SharedPreferences.Editor prefs = getPreferences(
-							MODE_PRIVATE).edit();
-					prefs.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
-					prefs.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
-					prefs.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
-					prefs.commit();
-
-					mDlgLogin.dismiss();
-					mDlgLogin = null;
-				} else if (cmd >= 400 && cmd < 600) {
-					mDlgError = new ChatDlgError(ChatActivity.this);
-					mDlgError.setOnClickListener(ChatActivity.this);
-					mDlgError.setMessage(msg.mMessage);
-					mDlgError.show();
-					try {
-						mService.disconnect();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
 			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 					.inflate(R.layout.chat_textview, null);
 			cTextView.setChatEvent(msg);

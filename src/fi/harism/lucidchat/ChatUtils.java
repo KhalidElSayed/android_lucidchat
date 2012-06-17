@@ -21,86 +21,96 @@ public final class ChatUtils {
 		return out.toString();
 	}
 
-	public static int getCommandInt(ChatMessage event) {
-		if (Character.isDigit(event.mCommand.charAt(0))) {
-			return Integer.parseInt(event.mCommand);
+	public static int getCommandInt(String command) {
+		if (Character.isDigit(command.charAt(0))) {
+			int cmd = Integer.parseInt(command);
+			if (cmd >= 400 && cmd < 600) {
+				return ChatMessage.CMD_SERVERMSG_ERROR;
+			}
+			return ChatMessage.CMD_SERVERMSG;
+		} else {
+			if (command.equalsIgnoreCase("PRIVMSG")) {
+				return ChatMessage.CMD_PRIVMSG;
+			}
+			if (command.equalsIgnoreCase("ERROR")) {
+				return ChatMessage.CMD_SERVERMSG_ERROR;
+			}
+			if (command.equals("JOIN")) {
+				return ChatMessage.CMD_JOIN;
+			}
+			if (command.equals("PART")) {
+				return ChatMessage.CMD_PART;
+			}
+			if (command.equals("PING")) {
+				return ChatMessage.CMD_PING;
+			}
 		}
-		return -1;
-	}
-
-	public static ChatMessage getEvent(String message) {
-		ChatMessage event = new ChatMessage();
-
-		int idx = 0;
-		String parts[] = message.split(" ");
-		if (parts[idx].startsWith(":")) {
-			event.mFrom = getFrom(parts[idx++]);
-		}
-
-		event.mCommand = parts[idx++].toUpperCase();
-
-		int cmd = ChatUtils.getCommandInt(event);
-		if (cmd >= 0) {
-			event.mTo = parts[idx++];
-		}
-
-		if (event.mCommand.equals("PRIVMSG")) {
-			event.mTo = parts[idx++];
-		}
-		if (cmd == 353) {
-			event.mTo = parts[idx += 2];
-		}
-		if (cmd == 432 || cmd == 433 || cmd == 436 || cmd == 437) {
-			++idx;
-		}
-
-		event.mMessage = concat(parts, idx, parts.length - 1, true);
-
-		return event;
+		return ChatMessage.CMD_UNKNOWN;
 	}
 
 	public static String getFrom(String from) {
 		if (from.charAt(0) != ':') {
-			return from;
+			return "";
 		}
-
 		int endIdx = from.indexOf('!');
 		if (endIdx == -1) {
-			endIdx = from.length();
+			return "";
 		}
-
 		return from.substring(1, endIdx);
 	}
 
-	public static boolean setEvent(ChatMessage event, String text) {
-		event.mFrom = event.mCommand = event.mTo = event.mMessage = null;
+	public static ChatMessage parseMessage(String message) {
+		ChatMessage msg = new ChatMessage();
 
-		text = text.trim();
-		String parts[] = text.split(" ");
-		if (parts.length >= 1) {
-			parts[0] = parts[0].toUpperCase();
-		}
-		if (parts.length >= 2) {
-			if (parts[0].equals("/JOIN")) {
-				event.mCommand = "JOIN";
-				event.mTo = parts[1];
-			}
-		}
-		if (parts.length >= 3) {
-			if (parts[0].equals("/MSG")) {
-				event.mCommand = "PRIVMSG";
-				event.mTo = parts[1];
-				event.mMessage = concat(parts, 2, parts.length - 1, false);
-			}
-			if (parts[0].equals("/ME")) {
-				event.mCommand = "PRIVMSG";
-				event.mTo = parts[1];
-				event.mMessage = ":" + (char) 0x01 + "ACTION "
-						+ concat(parts, 2, parts.length - 1, false);
-			}
+		int fromIdx = -1;
+		int commandIdx = 0;
+		int conversationIdx = -1;
+		int messageIdx = 1;
+
+		String parts[] = message.split(" ");
+		if (parts[0].startsWith(":")) {
+			fromIdx = 0;
+			commandIdx = 1;
+			messageIdx = 2;
 		}
 
-		return event.mCommand != null;
+		int cmd = -1;
+		msg.mCommand = getCommandInt(parts[commandIdx]);
+		if (Character.isDigit(parts[commandIdx].charAt(0))) {
+			cmd = Integer.parseInt(parts[commandIdx]);
+		}
+
+		if (cmd >= 0 || msg.mCommand == ChatMessage.CMD_PRIVMSG) {
+			conversationIdx = commandIdx + 1;
+			messageIdx = conversationIdx + 1;
+		}
+		if (cmd == 353) {
+			conversationIdx = commandIdx + 3;
+			messageIdx = conversationIdx + 1;
+		}
+		if (msg.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {
+			while (!parts[messageIdx].startsWith(":")) {
+				++messageIdx;
+			}
+		}
+
+		if (fromIdx >= 0) {
+			msg.mFrom = getFrom(parts[fromIdx]);
+		}
+		if (conversationIdx >= 0) {
+			msg.mConversation = parts[conversationIdx];
+		}
+		msg.mMessage = concat(parts, messageIdx, parts.length - 1, true);
+
+		if (msg.mCommand == ChatMessage.CMD_PRIVMSG
+				&& msg.mMessage.charAt(0) == '\u0001') {
+			if (msg.mMessage.startsWith("\u0001ACTION ")) {
+				msg.mMessage = msg.mMessage.substring(8);
+				msg.mCommand = ChatMessage.CMD_PRIVMSG_ACTION;
+			}
+		}
+
+		return msg;
 	}
 
 }

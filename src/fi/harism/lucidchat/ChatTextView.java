@@ -38,13 +38,11 @@ public class ChatTextView extends TextView {
 
 	private SpannableString getNick(ChatMessage event) {
 		String from = "";
-		if (ChatUtils.getCommandInt(event) < 0
-				&& event.mCommand.equals("PRIVMSG")) {
-			if (event.mMessage.startsWith("\u0001ACTION ")) {
-				from = "* " + event.mFrom + " ";
-			} else {
-				from = event.mFrom + ": ";
-			}
+		if (event.mCommand == ChatMessage.CMD_PRIVMSG) {
+			from = event.mFrom + ": ";
+		}
+		if (event.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
+			from = "* " + event.mFrom + " ";
 		}
 
 		SpannableString span = new SpannableString(from);
@@ -54,27 +52,18 @@ public class ChatTextView extends TextView {
 
 	private SpannableString getText(ChatMessage event) {
 		int color = COLOR_SERVER;
-		if (event.mCommand.equals("PRIVMSG")) {
+		if (event.mCommand == ChatMessage.CMD_PRIVMSG) {
 			color = COLOR_MESSAGE;
 		}
-		if (event.mCommand.equals("NOTICE")) {
+		if (event.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
 			color = COLOR_NOTICE;
 		}
-		if (event.mCommand.equals(ChatMessage.CMD_EXCEPTION)) {
-			color = COLOR_ERROR;
-		}
-		if (ChatUtils.getCommandInt(event) >= 400
-				&& ChatUtils.getCommandInt(event) < 600) {
+		if (event.mCommand == ChatMessage.CMD_EXCEPTION
+				|| event.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {
 			color = COLOR_ERROR;
 		}
 
-		SpannableString span;
-		if (event.mMessage.startsWith("\u0001ACTION ")) {
-			span = new SpannableString(event.mMessage.substring(8));
-			color = COLOR_NOTICE;
-		} else {
-			span = new SpannableString(event.mMessage);
-		}
+		SpannableString span = new SpannableString(event.mMessage);
 		span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
 		Linkify.addLinks(span, Linkify.ALL);
 		URLSpan spans[] = span.getSpans(0, span.length(), URLSpan.class);

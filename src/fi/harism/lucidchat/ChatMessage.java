@@ -5,7 +5,15 @@ import android.os.Parcelable;
 
 public class ChatMessage implements Parcelable {
 
-	public static final String CMD_EXCEPTION = "SERVER_EXCEPTION";
+	public static final int CMD_EXCEPTION = 1;
+	public static final int CMD_JOIN = 2;
+	public static final int CMD_PART = 3;
+	public static final int CMD_PING = 4;
+	public static final int CMD_PRIVMSG = 5;
+	public static final int CMD_PRIVMSG_ACTION = 6;
+	public static final int CMD_SERVERMSG = 7;
+	public static final int CMD_SERVERMSG_ERROR = 8;
+	public static final int CMD_UNKNOWN = -1;
 
 	public static final Parcelable.Creator<ChatMessage> CREATOR = new Parcelable.Creator<ChatMessage>() {
 		@Override
@@ -19,7 +27,8 @@ public class ChatMessage implements Parcelable {
 		}
 	};
 
-	public String mFrom, mTo, mCommand, mMessage;
+	public int mCommand;
+	public String mConversation, mFrom, mMessage;
 	public long mTime;
 
 	public ChatMessage() {
@@ -27,9 +36,9 @@ public class ChatMessage implements Parcelable {
 	}
 
 	private ChatMessage(Parcel in) {
+		mCommand = in.readInt();
+		mConversation = in.readString();
 		mFrom = in.readString();
-		mCommand = in.readString();
-		mTo = in.readString();
 		mMessage = in.readString();
 		mTime = in.readLong();
 	}
@@ -41,9 +50,9 @@ public class ChatMessage implements Parcelable {
 
 	@Override
 	public void writeToParcel(Parcel out, int flags) {
+		out.writeInt(mCommand);
+		out.writeString(mConversation);
 		out.writeString(mFrom);
-		out.writeString(mCommand);
-		out.writeString(mTo);
 		out.writeString(mMessage);
 		out.writeLong(mTime);
 	}

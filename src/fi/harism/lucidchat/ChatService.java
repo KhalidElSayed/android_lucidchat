@@ -1,7 +1,6 @@
 package fi.harism.lucidchat;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.HashMap;
 
 import android.app.Notification;
@@ -19,6 +18,7 @@ public class ChatService extends Service implements ChatObserver {
 	private ChatRunnable mChatRunnable;
 	private Thread mChatThread;
 	private final HashMap<String, ChatConversation> mConversationMap = new HashMap<String, ChatConversation>();
+	private String mNick, mHost;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -51,8 +51,8 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public void onChatMessage(String host, String message) {
 		Log.d("onChatMessage", message);
-		ChatMessage msg = ChatUtils.getEvent(message);
-		if (msg.mCommand.equals("PING")) {
+		ChatMessage msg = ChatUtils.parseMessage(message);
+		if (msg.mCommand == ChatMessage.CMD_PING) {
 			try {
 				mChatRunnable.send("PONG " + msg.mMessage);
 			} catch (IOException e) {
@@ -107,6 +107,10 @@ public class ChatService extends Service implements ChatObserver {
 		public void connect(String nick, String host, int port)
 				throws RemoteException {
 			disconnect();
+
+			mNick = nick;
+			mHost = host;
+
 			mChatRunnable = new ChatRunnable(ChatService.this);
 			mChatRunnable.init(nick, host, port);
 			mChatThread = new Thread(mChatRunnable);
@@ -154,24 +158,17 @@ public class ChatService extends Service implements ChatObserver {
 		}
 
 		@Override
-		public void sendEvent(ChatMessage message) throws RemoteException {
+		public void sendMessage(String message) throws RemoteException {
 			try {
-				message.mCommand = message.mCommand.toUpperCase();
-				StringWriter out = new StringWriter();
-				out.write(message.mCommand);
-				if (message.mTo != null) {
-					out.write(' ');
-					out.write(message.mTo);
-				}
-				if (message.mMessage != null) {
-					out.write(' ');
-					out.write(message.mMessage);
-				}
-				Log.d("sendEvent", out.toString());
-				mChatRunnable.send(out.toString());
+				ChatMessage msg = ChatUtils.parseMessage(message);
+				msg.mFrom = mNick;
 
-				if (message.mCommand.equals("PRIVMSG")) {
-					postChatEvent(message);
+				Log.d("sendMessage", message);
+				mChatRunnable.send(message);
+
+				if (msg.mCommand == ChatMessage.CMD_PRIVMSG
+						|| msg.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
+					postChatEvent(msg);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

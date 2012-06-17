@@ -8,7 +8,7 @@ interface IService {
 	void connect(in String nick, in String host, in int port);
 	void disconnect();
 	boolean isConnected();
-	void sendEvent(in ChatMessage message);
+	void sendMessage(in String message);
 	void setCallback(in IServiceCallback callback);
 	ChatConversation getConversation(in String id);
 }
