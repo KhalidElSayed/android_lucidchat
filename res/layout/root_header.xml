@@ -5,14 +5,12 @@
     android:layout_height="wrap_content"
     android:layout_alignParentTop="true" >
 
-    <Button
+    <ImageButton
         android:id="@+id/root_header_connect"
-        style="@style/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/imagebutton"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:text="Connect" />
+        android:src="@drawable/ic_connect" />
 
     <TextView
         android:id="@+id/root_header_title"

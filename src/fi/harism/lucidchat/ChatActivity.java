@@ -11,8 +11,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 public class ChatActivity extends Activity implements ServiceConnection,
@@ -180,6 +180,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 			} else if (mDlgLogin != null) {
 				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
 						mDlgLogin.getPort());
+			} else {
+				setConnected(false);
 			}
 		} catch (RemoteException ex) {
 			ex.printStackTrace();
@@ -201,12 +203,12 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		v.setEnabled(connected);
 		v.setFocusableInTouchMode(connected);
 
-		Button connect = (Button) findViewById(R.id.root_header_connect);
+		ImageButton connect = (ImageButton) findViewById(R.id.root_header_connect);
 		if (connected) {
-			connect.setText("Disconnect");
+			connect.setColorFilter(0xFFFF4040);
 			connect.setTag(true);
 		} else {
-			connect.setText("Connect");
+			connect.setColorFilter(0xFF91C346);
 			connect.setTag(false);
 		}
 	}
@@ -276,8 +278,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 					Intent intent = new Intent(ChatActivity.this,
 							ChatService.class);
 					stopService(intent);
-					// unbindService(ChatActivity.this);
-					// mService = null;
 				}
 			} catch (RemoteException e) {
 				e.printStackTrace();
