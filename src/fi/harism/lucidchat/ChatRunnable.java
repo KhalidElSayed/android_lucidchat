@@ -17,6 +17,7 @@ public class ChatRunnable implements Runnable {
 	private boolean mKeepRunning;
 	private String mNick;
 	private ChatObserver mObserver;
+	private Socket mSocket;
 	private BufferedWriter mWriter;
 
 	public ChatRunnable(ChatObserver observer) {
@@ -26,7 +27,11 @@ public class ChatRunnable implements Runnable {
 	public void disconnect() {
 		mKeepRunning = false;
 		try {
-			send("QUIT");
+			if (mWriter != null) {
+				send("QUIT");
+			} else if (mSocket != null) {
+				mSocket.close();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -43,14 +48,14 @@ public class ChatRunnable implements Runnable {
 		mKeepRunning = true;
 		while (mKeepRunning) {
 			try {
-				Socket s = new Socket();
-				s.connect(new InetSocketAddress(mHost, mHostPort), 5000);
+				mSocket = new Socket();
+				mSocket.connect(new InetSocketAddress(mHost, mHostPort), 5000);
 
-				InputStream is = s.getInputStream();
+				InputStream is = mSocket.getInputStream();
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(is));
 
-				OutputStream os = s.getOutputStream();
+				OutputStream os = mSocket.getOutputStream();
 				mWriter = new BufferedWriter(new OutputStreamWriter(os));
 
 				send("PASS " + System.currentTimeMillis());
@@ -65,7 +70,7 @@ public class ChatRunnable implements Runnable {
 				}
 
 				mWriter = null;
-				s.close();
+				mSocket.close();
 
 			} catch (IOException ex) {
 				ex.printStackTrace();

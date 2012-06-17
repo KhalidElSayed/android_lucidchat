@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, LucidChatActivity!</string>
     <string name="app_name">Lucid Chat</string>
+    <string name="root_header_connect">Connect</string>
+    <string name="root_header_disconnect">Disconnect</string>
+
+    <!-- Login dialog -->
+    <string name="dlg_login_title">Login to Server</string>
+    <string name="dlg_login_nick">Nickname:</string>
+    <string name="dlg_login_host">Server (e.g irc.cs.hut.fi):</string>
+    <string name="dlg_login_port">Server Port (default 6667):</string>
+    <string name="dlg_login_cancel">Cancel</string>
+    <string name="dlg_login_login">Login</string>
+
+    <!-- Error dialog -->
+    <string name="dlg_error_title">Error</string>
+    <string name="dlg_error_dismiss">Ok</string>
 
 </resources>

@@ -5,12 +5,13 @@
     android:layout_height="wrap_content"
     android:layout_alignParentTop="true" >
 
-    <ImageButton
+    <Button
         android:id="@+id/root_header_connect"
-        style="@style/imagebutton"
+        style="@style/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:src="@drawable/ic_connect" />
+        android:layout_centerVertical="true" />
 
     <TextView
         android:id="@+id/root_header_title"
@@ -19,6 +20,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:text="Lucid Chat" />
+        android:text="@string/app_name" />
 
 </RelativeLayout>

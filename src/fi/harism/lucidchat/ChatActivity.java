@@ -11,8 +11,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 
 public class ChatActivity extends Activity implements ServiceConnection,
 		View.OnClickListener {
@@ -79,9 +79,22 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		case R.id.dlg_login_login: {
 			Intent intent = new Intent(this, ChatService.class);
 			try {
+				if (mService.isConnected()) {
+					mService.disconnect();
+				}
 				startService(intent);
 				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
 						mDlgLogin.getPort());
+
+				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
+						.edit();
+				prefs.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
+				prefs.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
+				prefs.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
+				prefs.commit();
+
+				mDlgLogin.dismiss();
+				mDlgLogin = null;
 			} catch (RemoteException e) {
 				stopService(intent);
 				e.printStackTrace();
@@ -173,9 +186,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 					cScrollView.addView(cTextView);
 				}
 				setConnected(true);
-			} else if (mDlgLogin != null) {
-				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
-						mDlgLogin.getPort());
 			} else {
 				setConnected(false);
 			}
@@ -197,12 +207,12 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		v.setEnabled(connected);
 		v.setFocusableInTouchMode(connected);
 
-		ImageButton connect = (ImageButton) findViewById(R.id.root_header_connect);
+		Button connect = (Button) findViewById(R.id.root_header_connect);
 		if (connected) {
-			connect.setColorFilter(0xFFFF4040);
+			connect.setText(R.string.root_header_disconnect);
 			connect.setTag(true);
 		} else {
-			connect.setColorFilter(0xFF91C346);
+			connect.setText(R.string.root_header_connect);
 			connect.setTag(false);
 		}
 	}

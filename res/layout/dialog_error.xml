@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="right"
-            android:text="Error" />
+            android:text="@string/dlg_error_title" />
     </LinearLayout>
 
     <TextView
@@ -22,7 +22,7 @@
         style="@style/textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="" />
+        android:singleLine="false" />
 
     <LinearLayout
         style="@style/footer"
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Ok" />
+            android:text="@string/dlg_error_dismiss" />
 
         <View
             android:layout_width="1dp"
