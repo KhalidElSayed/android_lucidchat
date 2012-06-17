@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 public class ChatActivity extends Activity implements ServiceConnection,
 		View.OnClickListener {
@@ -161,9 +160,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder binder) {
-		Toast.makeText(this, "Client onServiceConnected.", Toast.LENGTH_SHORT)
-				.show();
-
 		mService = IService.Stub.asInterface(binder);
 		try {
 			mService.setCallback(mClient);
@@ -190,8 +186,6 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 	@Override
 	public void onServiceDisconnected(ComponentName name) {
-		Toast.makeText(this, "Client onServiceDisconnected.",
-				Toast.LENGTH_SHORT).show();
 		mService = null;
 	}
 

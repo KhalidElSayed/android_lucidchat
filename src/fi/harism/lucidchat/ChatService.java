@@ -130,7 +130,6 @@ public class ChatService extends Service implements ChatObserver {
 
 		@Override
 		public void disconnect() throws RemoteException {
-			Log.d("disconnect()", "disconnect()");
 			if (mChatThread != null) {
 				mChatRunnable.disconnect();
 				mChatThread = null;
