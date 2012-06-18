@@ -6,7 +6,7 @@
     android:layout_alignParentBottom="true" >
 
     <ImageButton
-        android:id="@+id/send"
+        android:id="@+id/root_footer_send"
         style="@style/imagebutton"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
@@ -14,12 +14,12 @@
         android:src="@drawable/ic_send" />
 
     <EditText
-        android:id="@+id/edit"
+        android:id="@+id/root_footer_edit"
         style="@style/edittext"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:layout_toLeftOf="@id/send" />
+        android:layout_toLeftOf="@id/root_footer_send" />
 
 </RelativeLayout>

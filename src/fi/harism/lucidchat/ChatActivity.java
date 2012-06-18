@@ -51,8 +51,8 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	@Override
 	public void onClick(View view) {
 		switch (view.getId()) {
-		case R.id.send: {
-			EditText edit = (EditText) findViewById(R.id.edit);
+		case R.id.root_footer_send: {
+			EditText edit = (EditText) findViewById(R.id.root_footer_edit);
 			String txt = edit.getText().toString().trim();
 			if (txt.length() > 0) {
 				try {
@@ -88,7 +88,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 						mService.sendMessage(txt);
 					}
 					edit.setText("");
-				} catch (Exception ex) {
+				} catch (RemoteException ex) {
 					ex.printStackTrace();
 				}
 			}
@@ -162,6 +162,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 		setContentView(R.layout.root);
 
 		findViewById(R.id.root_header_connect).setOnClickListener(this);
+		findViewById(R.id.root_footer_send).setOnClickListener(this);
 
 		setConnected(false);
 
@@ -240,7 +241,7 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	}
 
 	private void setConnected(boolean connected) {
-		ImageButton send = (ImageButton) findViewById(R.id.send);
+		ImageButton send = (ImageButton) findViewById(R.id.root_footer_send);
 		send.setEnabled(connected);
 		if (connected) {
 			send.setColorFilter(0xFFFFFFFF);
