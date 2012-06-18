@@ -15,5 +15,5 @@ information. Application icons are copied from DeviantArt and are licensed under
 [Creative Commons 3.0](http://creativecommons.org/licenses/by-nc-sa/3.0/)
 license making them free to use for non-commercial projects.
 
-http://mediadesign.deviantart.com/art/HydroPRO-HP-Dock-Icon-Set-71776088
+http://mediadesign.deviantart.com/art/HydroPRO-HP-Dock-Icon-Set-71776088<br>
 http://chrfb.deviantart.com/art/quot-ecqlipse-2-quot-PNG-59941546
