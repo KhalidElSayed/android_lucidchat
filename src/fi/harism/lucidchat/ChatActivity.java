@@ -11,8 +11,10 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 public class ChatActivity extends Activity implements ServiceConnection,
 		View.OnClickListener {
@@ -139,17 +141,13 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
 		setContentView(R.layout.root);
 
 		findViewById(R.id.root_header_connect).setOnClickListener(this);
 
-		View v = findViewById(R.id.send);
-		v.setOnClickListener(this);
-		v.setEnabled(false);
-
-		v = findViewById(R.id.edit);
-		v.setEnabled(false);
-		v.setFocusable(false);
+		setConnected(false);
 
 		Intent intent = new Intent(this, ChatService.class);
 		bindService(intent, this, Context.BIND_AUTO_CREATE);
@@ -226,12 +224,13 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	}
 
 	private void setConnected(boolean connected) {
-		View v = findViewById(R.id.send);
-		v.setEnabled(connected);
-
-		v = findViewById(R.id.edit);
-		v.setEnabled(connected);
-		v.setFocusableInTouchMode(connected);
+		ImageButton send = (ImageButton) findViewById(R.id.send);
+		send.setEnabled(connected);
+		if (connected) {
+			send.setColorFilter(0xFFFFFFFF);
+		} else {
+			send.setColorFilter(0x80A06060);
+		}
 
 		Button connect = (Button) findViewById(R.id.root_header_connect);
 		if (connected) {
