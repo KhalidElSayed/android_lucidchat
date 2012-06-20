@@ -18,8 +18,6 @@ package fi.harism.lucidchat;
 
 import java.util.Vector;
 
-import fi.harism.lucidchat.IChatService.Stub;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -38,6 +36,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import fi.harism.lucidchat.IChatService.Stub;
 
 public class ChatActivity extends Activity {
 

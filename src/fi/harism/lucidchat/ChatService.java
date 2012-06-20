@@ -27,12 +27,13 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-public class ChatService extends Service implements ChatObserver {
+public class ChatService extends Service {
 
-	private final Binder mBinder = new Binder(this);
+	private Binder mBinder = new Binder(this);
+	private ChatRunnable.Observer mChatObserver = new ChatRunnableObserver();
 	private ChatRunnable mChatRunnable;
 	private Thread mChatThread;
-	private final HashMap<String, ChatConversation> mConversationMap = new HashMap<String, ChatConversation>();
+	private HashMap<String, ChatConversation> mConversationMap = new HashMap<String, ChatConversation>();
 	private String mNick, mHost;
 	private Observer mObserver;
 
@@ -42,7 +43,7 @@ public class ChatService extends Service implements ChatObserver {
 		mNick = nick;
 		mHost = host;
 
-		mChatRunnable = new ChatRunnable(ChatService.this);
+		mChatRunnable = new ChatRunnable(mChatObserver);
 		mChatRunnable.init(nick, host, port);
 		mChatThread = new Thread(mChatRunnable);
 		mChatThread.start();
@@ -90,52 +91,6 @@ public class ChatService extends Service implements ChatObserver {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
-	}
-
-	@Override
-	public void onChatConnected(boolean connected) {
-		if (mObserver != null) {
-			mObserver.onConnected(connected);
-		}
-	}
-
-	@Override
-	public void onChatError(String reason) {
-		if (mObserver != null) {
-			ChatMessage event = new ChatMessage();
-			event.mMessage = reason;
-			event.mCommand = ChatMessage.CMD_EXCEPTION;
-			event.mFrom = "";
-			postChatEvent(event);
-		}
-	}
-
-	@Override
-	public void onChatMessage(String message) {
-		Log.d("onChatMessage", message);
-		ChatMessage msg = ChatUtils.parseMessage(message);
-		if (msg.mCommand == ChatMessage.CMD_PING) {
-			try {
-				mChatRunnable.send("PONG " + msg.mMessage);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
-			if (msg.mFrom == null) {
-				msg.mFrom = "";
-			}
-
-			if (!msg.mFrom.equals("") && msg.mConversation.equals(mNick)) {
-				msg.mConversation = msg.mFrom;
-			}
-			if (msg.mConversation.equals("*")
-					|| msg.mConversation.equals(mHost)
-					|| msg.mConversation.equals(mNick)) {
-				msg.mConversation = "";
-			}
-
-			postChatEvent(msg);
-		}
 	}
 
 	@Override
@@ -200,6 +155,56 @@ public class ChatService extends Service implements ChatObserver {
 		public ChatService getChatService() {
 			return mChatService;
 		}
+	}
+
+	private class ChatRunnableObserver implements ChatRunnable.Observer {
+
+		@Override
+		public void onConnected(boolean connected) {
+			if (mObserver != null) {
+				mObserver.onConnected(connected);
+			}
+		}
+
+		@Override
+		public void onError(String reason) {
+			if (mObserver != null) {
+				ChatMessage event = new ChatMessage();
+				event.mMessage = reason;
+				event.mCommand = ChatMessage.CMD_EXCEPTION;
+				event.mFrom = "";
+				postChatEvent(event);
+			}
+		}
+
+		@Override
+		public void onMessage(String message) {
+			Log.d("onChatMessage", message);
+			ChatMessage msg = ChatUtils.parseMessage(message);
+			if (msg.mCommand == ChatMessage.CMD_PING) {
+				try {
+					mChatRunnable.send("PONG " + msg.mMessage);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				if (msg.mFrom == null) {
+					msg.mFrom = "";
+				}
+
+				if (!msg.mFrom.equals("") && msg.mConversation.equals(mNick)) {
+					msg.mConversation = msg.mFrom;
+				}
+				if (msg.mConversation.equals("*")
+						|| msg.mConversation.equals(mHost)
+						|| msg.mConversation.equals(mNick)) {
+					msg.mConversation = "";
+				}
+
+				postChatEvent(msg);
+			}
+		}
+
 	}
 
 	public static interface Observer {

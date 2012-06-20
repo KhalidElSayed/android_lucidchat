@@ -32,11 +32,11 @@ public class ChatRunnable implements Runnable {
 	private int mHostPort;
 	private boolean mKeepRunning;
 	private String mNick;
-	private ChatObserver mObserver;
+	private Observer mObserver;
 	private Socket mSocket;
 	private BufferedWriter mWriter;
 
-	public ChatRunnable(ChatObserver observer) {
+	public ChatRunnable(Observer observer) {
 		mObserver = observer;
 	}
 
@@ -77,11 +77,11 @@ public class ChatRunnable implements Runnable {
 				send("NICK " + mNick);
 				send("USER " + mNick + " 0 * " + mNick);
 
-				mObserver.onChatConnected(true);
+				mObserver.onConnected(true);
 
 				String msg;
 				while (mKeepRunning && (msg = reader.readLine()) != null) {
-					mObserver.onChatMessage(msg);
+					mObserver.onMessage(msg);
 				}
 
 				mWriter = null;
@@ -90,10 +90,10 @@ public class ChatRunnable implements Runnable {
 			} catch (IOException ex) {
 				ex.printStackTrace();
 				mWriter = null;
-				mObserver.onChatError(ex.getMessage());
+				mObserver.onError(ex.getMessage());
 			}
 
-			mObserver.onChatConnected(false);
+			mObserver.onConnected(false);
 
 			if (mKeepRunning) {
 				try {
@@ -113,4 +113,15 @@ public class ChatRunnable implements Runnable {
 			mWriter.flush();
 		}
 	}
+
+	public static interface Observer {
+
+		public void onConnected(boolean connected);
+
+		public void onError(String reason);
+
+		public void onMessage(String message);
+
+	}
+
 }
