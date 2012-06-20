@@ -16,6 +16,8 @@
 
 package fi.harism.lucidchat;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -145,14 +147,13 @@ public class ChatActivity extends Activity {
 		}
 
 		private void onChatMessageImpl(ChatMessage msg) {
-			ViewPager viewPager = (ViewPager) findViewById(R.id.root_viewpager);
-			ChatScrollView cScrollView = (ChatScrollView) viewPager
-					.findViewWithTag(msg.mConversation);
+			ChatScrollView cScrollView = mPagerAdapter
+					.getScrollView(msg.mConversation);
 
 			if (cScrollView == null) {
 				cScrollView = (ChatScrollView) getLayoutInflater().inflate(
 						R.layout.chat_scrollview, null);
-				cScrollView.setTag(msg.mConversation);
+				cScrollView.setConversation(msg.mConversation);
 				mPagerAdapter.addScrollView(cScrollView);
 				mPagerAdapter.notifyDataSetChanged();
 			}
@@ -295,8 +296,8 @@ public class ChatActivity extends Activity {
 		@Override
 		public void onPageSelected(int position) {
 			TextView tv = (TextView) findViewById(R.id.root_conversation);
-			String txt = (String) mPagerAdapter.getScrollView(position)
-					.getTag();
+			String txt = mPagerAdapter.getScrollView(position)
+					.getConversation();
 			if (txt.length() > 0) {
 				tv.setVisibility(View.VISIBLE);
 				tv.setText(txt);
@@ -309,6 +310,13 @@ public class ChatActivity extends Activity {
 
 	private class PagerAdapterImpl extends PagerAdapter {
 
+		private Comparator<ChatScrollView> mComparator = new Comparator<ChatScrollView>() {
+			@Override
+			public int compare(ChatScrollView c1, ChatScrollView c2) {
+				return c1.getConversation().compareToIgnoreCase(
+						c2.getConversation());
+			}
+		};
 		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
 
 		public void addScrollView(ChatScrollView view) {
@@ -329,6 +337,15 @@ public class ChatActivity extends Activity {
 			return mViews.get(position);
 		}
 
+		public ChatScrollView getScrollView(String conversation) {
+			for (ChatScrollView csv : mViews) {
+				if (csv.getConversation().equals(conversation)) {
+					return csv;
+				}
+			}
+			return null;
+		}
+
 		@Override
 		public Object instantiateItem(ViewGroup collection, int position) {
 			((ViewPager) collection).addView(mViews.get(position));
@@ -342,6 +359,12 @@ public class ChatActivity extends Activity {
 
 		public void removeScrollView(ChatScrollView view) {
 			mViews.remove(view);
+		}
+
+		@Override
+		public void startUpdate(ViewGroup collection) {
+			super.startUpdate(collection);
+			Collections.sort(mViews, mComparator);
 		}
 
 	}
@@ -367,7 +390,7 @@ public class ChatActivity extends Activity {
 							cScrollView.addView(cTextView);
 						}
 					}
-					cScrollView.setTag(id);
+					cScrollView.setConversation(id);
 					mPagerAdapter.addScrollView(cScrollView);
 				}
 				mPagerAdapter.notifyDataSetChanged();

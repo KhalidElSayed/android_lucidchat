@@ -24,6 +24,7 @@ import android.widget.ScrollView;
 
 public class ChatScrollView extends ScrollView {
 
+	private String mConversation;
 	private final ScrollDownRunnable mScrollDownRunnable = new ScrollDownRunnable();
 
 	public ChatScrollView(Context context) {
@@ -47,19 +48,25 @@ public class ChatScrollView extends ScrollView {
 		}
 	}
 
+	public String getConversation() {
+		return mConversation;
+	}
+
 	@Override
 	public void removeAllViews() {
 		ViewGroup listView = (ViewGroup) findViewById(R.id.root_scroll_list);
 		listView.removeAllViews();
 	}
 
-	private class ScrollDownRunnable implements Runnable {
+	public void setConversation(String conversation) {
+		mConversation = conversation;
+	}
 
+	private class ScrollDownRunnable implements Runnable {
 		@Override
 		public void run() {
 			fullScroll(View.FOCUS_DOWN);
 		}
-
 	}
 
 }
