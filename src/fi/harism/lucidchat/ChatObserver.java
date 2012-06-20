@@ -20,8 +20,8 @@ public interface ChatObserver {
 
 	public void onChatConnected(boolean connected);
 
-	public void onChatError(String host, String reason);
+	public void onChatError(String reason);
 
-	public void onChatMessage(String host, String message);
+	public void onChatMessage(String message);
 
 }

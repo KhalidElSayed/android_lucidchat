@@ -81,7 +81,7 @@ public class ChatRunnable implements Runnable {
 
 				String msg;
 				while (mKeepRunning && (msg = reader.readLine()) != null) {
-					mObserver.onChatMessage(mHost, msg);
+					mObserver.onChatMessage(msg);
 				}
 
 				mWriter = null;
@@ -90,7 +90,7 @@ public class ChatRunnable implements Runnable {
 			} catch (IOException ex) {
 				ex.printStackTrace();
 				mWriter = null;
-				mObserver.onChatError(mHost, ex.getMessage());
+				mObserver.onChatError(ex.getMessage());
 			}
 
 			mObserver.onChatConnected(false);

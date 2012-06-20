@@ -16,6 +16,10 @@
 
 package fi.harism.lucidchat;
 
+import java.util.Vector;
+
+import fi.harism.lucidchat.IChatService.Stub;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,16 +28,18 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
-public class ChatActivity extends Activity implements ServiceConnection,
-		View.OnClickListener {
+public class ChatActivity extends Activity {
 
 	private static final String KEY_DLGERROR = "mDlgError";
 	private static final String KEY_DLGERROR_MESSAGE = "mDlgError.message";
@@ -43,19 +49,145 @@ public class ChatActivity extends Activity implements ServiceConnection,
 	private static final String KEY_DLGLOGIN_NICK = "mDlgLogin.nick";
 	private static final String KEY_DLGLOGIN_PORT = "mDlgLogin.port";
 
-	private final ClientBinder mClient = new ClientBinder();
+	private ChatService mChatService;
+	private ChatService.Observer mChatServiceObserver = new ChatServiceObserver();
 	private ChatDlgError mDlgError;
 	private ChatDlgLogin mDlgLogin;
-	private IService mService;
+	private OnClickListenerImpl mOnClickListener = new OnClickListenerImpl();
+	private ViewPager.OnPageChangeListener mOnPageChangeListener = new OnPageChangeListenerImpl();
+	private PagerAdapterImpl mPagerAdapter = new PagerAdapterImpl();
+	private ServiceConnectionImpl mServiceConnection = new ServiceConnectionImpl();
 
 	@Override
-	public void onClick(View view) {
-		switch (view.getId()) {
-		case R.id.root_footer_send: {
-			EditText edit = (EditText) findViewById(R.id.root_footer_edit);
-			String txt = edit.getText().toString().trim();
-			if (txt.length() > 0) {
-				try {
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
+		setContentView(R.layout.root);
+
+		findViewById(R.id.root_header_connect).setOnClickListener(
+				mOnClickListener);
+		findViewById(R.id.root_footer_send)
+				.setOnClickListener(mOnClickListener);
+
+		ViewPager viewPager = (ViewPager) findViewById(R.id.root_viewpager);
+		viewPager.setAdapter(mPagerAdapter);
+		viewPager.setOnPageChangeListener(mOnPageChangeListener);
+
+		setSendEnabled(false);
+
+		Intent intent = new Intent(this, ChatService.class);
+		bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (mChatService != null) {
+			unbindService(mServiceConnection);
+		}
+	}
+
+	@Override
+	public void onRestoreInstanceState(Bundle bundle) {
+		if (bundle.getBoolean(KEY_DLGLOGIN)) {
+			mDlgLogin = new ChatDlgLogin(this);
+			mDlgLogin.setOnClickListener(mOnClickListener);
+			mDlgLogin.setNick(bundle.getString(KEY_DLGLOGIN_NICK));
+			mDlgLogin.setHost(bundle.getString(KEY_DLGLOGIN_HOST));
+			mDlgLogin.setPort(bundle.getInt(KEY_DLGLOGIN_PORT));
+			mDlgLogin.show();
+		}
+		if (bundle.getBoolean(KEY_DLGERROR)) {
+			mDlgError = new ChatDlgError(this);
+			mDlgError.setOnClickListener(mOnClickListener);
+			mDlgError.setMessage(bundle.getString(KEY_DLGERROR_MESSAGE));
+			mDlgError.show();
+		}
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle bundle) {
+		if (mDlgLogin != null) {
+			bundle.putBoolean(KEY_DLGLOGIN, true);
+			bundle.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
+			bundle.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
+			bundle.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
+			mDlgLogin.dismiss();
+		}
+		if (mDlgError != null) {
+			bundle.putBoolean(KEY_DLGERROR, true);
+			bundle.putString(KEY_DLGERROR_MESSAGE, mDlgError.getMessage());
+			mDlgError.dismiss();
+		}
+	}
+
+	public void setSendEnabled(boolean enabled) {
+		ImageButton send = (ImageButton) findViewById(R.id.root_footer_send);
+		send.setEnabled(enabled);
+		if (enabled) {
+			send.setColorFilter(0xFFFFFFFF);
+		} else {
+			send.setColorFilter(0x80A06060);
+		}
+	}
+
+	private final class ChatServiceObserver implements ChatService.Observer {
+
+		@Override
+		public void onChatMessage(final ChatMessage message) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onChatMessageImpl(message);
+				}
+			});
+		}
+
+		private void onChatMessageImpl(ChatMessage msg) {
+			ViewPager viewPager = (ViewPager) findViewById(R.id.root_viewpager);
+			ChatScrollView cScrollView = (ChatScrollView) viewPager
+					.findViewWithTag(msg.mConversation);
+
+			if (cScrollView == null) {
+				cScrollView = (ChatScrollView) getLayoutInflater().inflate(
+						R.layout.chat_scrollview, null);
+				cScrollView.setTag(msg.mConversation);
+				mPagerAdapter.addScrollView(cScrollView);
+				mPagerAdapter.notifyDataSetChanged();
+			}
+
+			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
+					.inflate(R.layout.chat_textview, null);
+			cTextView.setChatEvent(msg);
+			cScrollView.addView(cTextView);
+		}
+
+		@Override
+		public void onConnected(final boolean connected) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onConnectedImpl(connected);
+				}
+			});
+		}
+
+		private void onConnectedImpl(boolean connected) {
+			setSendEnabled(connected);
+		}
+
+	}
+
+	private class OnClickListenerImpl implements View.OnClickListener {
+		@Override
+		public void onClick(View view) {
+			switch (view.getId()) {
+			case R.id.root_footer_send: {
+				EditText edit = (EditText) findViewById(R.id.root_footer_edit);
+				String txt = edit.getText().toString().trim();
+				if (txt.length() > 0) {
 					String txtUpper = txt.toUpperCase();
 					if (txtUpper.startsWith("/JOIN ")) {
 						txt = "JOIN " + txt.substring(5).trim();
@@ -85,49 +217,44 @@ public class ChatActivity extends Activity implements ServiceConnection,
 					}
 
 					if (txt.length() > 0) {
-						mService.sendMessage(txt);
+						mChatService.sendMessage(txt);
 					}
 					edit.setText("");
-				} catch (RemoteException ex) {
-					ex.printStackTrace();
 				}
+				break;
 			}
-			break;
-		}
-		case R.id.root_header_connect: {
-			View v = findViewById(R.id.root_header_connect);
-			if (v.getTag() == null || (Boolean) v.getTag() == false) {
-				mDlgLogin = new ChatDlgLogin(this);
-				mDlgLogin.setOnClickListener(this);
+			case R.id.root_header_connect: {
+				View v = findViewById(R.id.root_header_connect);
+				if (v.getTag() == null || (Boolean) v.getTag() == false) {
+					mDlgLogin = new ChatDlgLogin(ChatActivity.this);
+					mDlgLogin.setOnClickListener(this);
 
-				SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-				mDlgLogin.setNick(prefs.getString(KEY_DLGLOGIN_NICK, ""));
-				mDlgLogin.setHost(prefs.getString(KEY_DLGLOGIN_HOST, ""));
-				mDlgLogin.setPort(prefs.getInt(KEY_DLGLOGIN_PORT, -1));
+					SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+					mDlgLogin.setNick(prefs.getString(KEY_DLGLOGIN_NICK, ""));
+					mDlgLogin.setHost(prefs.getString(KEY_DLGLOGIN_HOST, ""));
+					mDlgLogin.setPort(prefs.getInt(KEY_DLGLOGIN_PORT, -1));
 
-				mDlgLogin.show();
-			} else {
-				try {
-					mService.disconnect();
-				} catch (RemoteException e) {
-					e.printStackTrace();
+					mDlgLogin.show();
+				} else {
+					mChatService.disconnect();
+					Button connect = (Button) findViewById(R.id.root_header_connect);
+					connect.setText(R.string.root_header_connect);
+					connect.setTag(false);
 				}
+				break;
 			}
-			break;
-		}
-		case R.id.dlg_login_cancel: {
-			mDlgLogin.dismiss();
-			mDlgLogin = null;
-			break;
-		}
-		case R.id.dlg_login_login: {
-			Intent intent = new Intent(this, ChatService.class);
-			try {
-				if (mService.isConnected()) {
-					mService.disconnect();
+			case R.id.dlg_login_cancel: {
+				mDlgLogin.dismiss();
+				mDlgLogin = null;
+				break;
+			}
+			case R.id.dlg_login_login: {
+				Intent intent = new Intent(ChatActivity.this, ChatService.class);
+				if (mChatService.isConnected()) {
+					mChatService.disconnect();
 				}
 				startService(intent);
-				mService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
+				mChatService.connect(mDlgLogin.getNick(), mDlgLogin.getHost(),
 						mDlgLogin.getPort());
 
 				SharedPreferences.Editor prefs = getPreferences(MODE_PRIVATE)
@@ -139,170 +266,127 @@ public class ChatActivity extends Activity implements ServiceConnection,
 
 				mDlgLogin.dismiss();
 				mDlgLogin = null;
-			} catch (RemoteException e) {
-				stopService(intent);
-				e.printStackTrace();
+
+				Button connect = (Button) findViewById(R.id.root_header_connect);
+				connect.setText(R.string.root_header_disconnect);
+				connect.setTag(true);
+				break;
 			}
-			break;
-		}
-		case R.id.dlg_error_ok: {
-			mDlgError.dismiss();
-			mDlgError = null;
-			break;
-		}
-		}
-	}
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().setSoftInputMode(
-				WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED);
-		setContentView(R.layout.root);
-
-		findViewById(R.id.root_header_connect).setOnClickListener(this);
-		findViewById(R.id.root_footer_send).setOnClickListener(this);
-
-		setConnected(false);
-
-		Intent intent = new Intent(this, ChatService.class);
-		bindService(intent, this, Context.BIND_AUTO_CREATE);
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		if (mService != null) {
-			unbindService(this);
+			case R.id.dlg_error_ok: {
+				mDlgError.dismiss();
+				mDlgError = null;
+				break;
+			}
+			}
 		}
 	}
 
-	@Override
-	public void onRestoreInstanceState(Bundle bundle) {
-		if (bundle.getBoolean(KEY_DLGLOGIN)) {
-			mDlgLogin = new ChatDlgLogin(this);
-			mDlgLogin.setOnClickListener(this);
-			mDlgLogin.setNick(bundle.getString(KEY_DLGLOGIN_NICK));
-			mDlgLogin.setHost(bundle.getString(KEY_DLGLOGIN_HOST));
-			mDlgLogin.setPort(bundle.getInt(KEY_DLGLOGIN_PORT));
-			mDlgLogin.show();
-		}
-		if (bundle.getBoolean(KEY_DLGERROR)) {
-			mDlgError = new ChatDlgError(this);
-			mDlgError.setOnClickListener(this);
-			mDlgError.setMessage(bundle.getString(KEY_DLGERROR_MESSAGE));
-			mDlgError.show();
-		}
-	}
+	private class OnPageChangeListenerImpl implements
+			ViewPager.OnPageChangeListener {
 
-	@Override
-	public void onSaveInstanceState(Bundle bundle) {
-		if (mDlgLogin != null) {
-			bundle.putBoolean(KEY_DLGLOGIN, true);
-			bundle.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
-			bundle.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
-			bundle.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
-			mDlgLogin.dismiss();
+		@Override
+		public void onPageScrolled(int position, float positionOffset,
+				int positionOffsetPixels) {
 		}
-		if (mDlgError != null) {
-			bundle.putBoolean(KEY_DLGERROR, true);
-			bundle.putString(KEY_DLGERROR_MESSAGE, mDlgError.getMessage());
-			mDlgError.dismiss();
-		}
-	}
 
-	@Override
-	public void onServiceConnected(ComponentName name, IBinder binder) {
-		mService = IService.Stub.asInterface(binder);
-		try {
-			mService.setCallback(mClient);
-			if (mService.isConnected()) {
-				ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.root_scroll);
-				ChatConversation conversation = mService.getConversation(null);
-				for (ChatMessage message : conversation.getMessages()) {
-					ChatTextView cTextView = (ChatTextView) getLayoutInflater()
-							.inflate(R.layout.chat_textview, null);
-					cTextView.setChatEvent(message);
-					cScrollView.addView(cTextView);
-				}
-				setConnected(true);
+		@Override
+		public void onPageScrollStateChanged(int state) {
+		}
+
+		@Override
+		public void onPageSelected(int position) {
+			TextView tv = (TextView) findViewById(R.id.root_conversation);
+			String txt = (String) mPagerAdapter.getScrollView(position)
+					.getTag();
+			if (txt.length() > 0) {
+				tv.setVisibility(View.VISIBLE);
+				tv.setText(txt);
 			} else {
-				setConnected(false);
+				tv.setVisibility(View.GONE);
 			}
-		} catch (RemoteException ex) {
-			ex.printStackTrace();
 		}
+
 	}
 
-	@Override
-	public void onServiceDisconnected(ComponentName name) {
-		mService = null;
-	}
+	private class PagerAdapterImpl extends PagerAdapter {
 
-	private void setConnected(boolean connected) {
-		ImageButton send = (ImageButton) findViewById(R.id.root_footer_send);
-		send.setEnabled(connected);
-		if (connected) {
-			send.setColorFilter(0xFFFFFFFF);
-		} else {
-			send.setColorFilter(0x80A06060);
-		}
+		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
 
-		Button connect = (Button) findViewById(R.id.root_header_connect);
-		if (connected) {
-			connect.setText(R.string.root_header_disconnect);
-			connect.setTag(true);
-		} else {
-			connect.setText(R.string.root_header_connect);
-			connect.setTag(false);
-		}
-	}
-
-	private final class ClientBinder extends IServiceCallback.Stub {
-
-		@Override
-		public void onChatMessage(final ChatMessage message)
-				throws RemoteException {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onChatMessageImpl(message);
-				}
-			});
-		}
-
-		private void onChatMessageImpl(ChatMessage msg) {
-			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
-					.inflate(R.layout.chat_textview, null);
-			cTextView.setChatEvent(msg);
-
-			ChatScrollView cScrollView = (ChatScrollView) findViewById(R.id.root_scroll);
-			cScrollView.addView(cTextView);
+		public void addScrollView(ChatScrollView view) {
+			mViews.add(view);
 		}
 
 		@Override
-		public void onConnected(final boolean connected) throws RemoteException {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onConnectedImpl(connected);
-				}
-			});
+		public void destroyItem(ViewGroup collection, int position, Object obj) {
+			((ViewPager) collection).removeView((View) obj);
 		}
 
-		private void onConnectedImpl(boolean connected) {
-			try {
-				if (!mService.isConnected()) {
-					connected = false;
-					Intent intent = new Intent(ChatActivity.this,
-							ChatService.class);
-					stopService(intent);
+		@Override
+		public int getCount() {
+			return mViews.size();
+		}
+
+		public ChatScrollView getScrollView(int position) {
+			return mViews.get(position);
+		}
+
+		@Override
+		public Object instantiateItem(ViewGroup collection, int position) {
+			((ViewPager) collection).addView(mViews.get(position));
+			return mViews.get(position);
+		}
+
+		@Override
+		public boolean isViewFromObject(View view, Object obj) {
+			return view == obj;
+		}
+
+		public void removeScrollView(ChatScrollView view) {
+			mViews.remove(view);
+		}
+
+	}
+
+	private class ServiceConnectionImpl implements ServiceConnection {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			IChatService srv = Stub.asInterface(binder);
+			mChatService = ((ChatService.Binder) srv.asBinder())
+					.getChatService();
+			mChatService.setObserver(mChatServiceObserver);
+			if (mChatService.isConnected()) {
+				for (String id : mChatService.getConversationIds()) {
+					ChatConversation conversation = mChatService
+							.getConversation(id);
+					ChatScrollView cScrollView = (ChatScrollView) getLayoutInflater()
+							.inflate(R.layout.chat_scrollview, null);
+					if (conversation != null) {
+						for (ChatMessage message : conversation.getMessages()) {
+							ChatTextView cTextView = (ChatTextView) getLayoutInflater()
+									.inflate(R.layout.chat_textview, null);
+							cTextView.setChatEvent(message);
+							cScrollView.addView(cTextView);
+						}
+					}
+					cScrollView.setTag(id);
+					mPagerAdapter.addScrollView(cScrollView);
 				}
-			} catch (RemoteException e) {
-				e.printStackTrace();
+				mPagerAdapter.notifyDataSetChanged();
+				setSendEnabled(true);
+				Button connect = (Button) findViewById(R.id.root_header_connect);
+				connect.setText(R.string.root_header_disconnect);
+				connect.setTag(true);
+			} else {
+				setSendEnabled(false);
+				Button connect = (Button) findViewById(R.id.root_header_connect);
+				connect.setText(R.string.root_header_connect);
+				connect.setTag(false);
 			}
-			setConnected(connected);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mChatService = null;
 		}
 
 	}
