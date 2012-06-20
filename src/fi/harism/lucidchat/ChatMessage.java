@@ -29,7 +29,7 @@ public class ChatMessage {
 	public static final int CMD_UNKNOWN = -1;
 
 	public int mCommand;
-	public String mConversation = "", mFrom = "", mMessage = "";
+	public String mConversationId = "", mFrom = "", mMessage = "";
 	public long mTime;
 
 	public ChatMessage() {

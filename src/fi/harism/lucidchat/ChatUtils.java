@@ -18,8 +18,16 @@ package fi.harism.lucidchat;
 
 import java.io.StringWriter;
 
+/**
+ * Utility methods for chat message parsing.
+ */
 public final class ChatUtils {
 
+	/**
+	 * Concats string from string array. Starting from index first until index
+	 * last. If stripColon is set to true, first string starting with colon is
+	 * replaced with substring(1).
+	 */
 	public static String concat(String[] parts, int first, int last,
 			boolean stripColon) {
 		StringWriter out = new StringWriter();
@@ -37,6 +45,9 @@ public final class ChatUtils {
 		return out.toString();
 	}
 
+	/**
+	 * Parses IRC command into ChatMessage command.
+	 */
 	public static int getCommandInt(String command) {
 		if (Character.isDigit(command.charAt(0))) {
 			int cmd = Integer.parseInt(command);
@@ -64,6 +75,9 @@ public final class ChatUtils {
 		return ChatMessage.CMD_UNKNOWN;
 	}
 
+	/**
+	 * Returns nickname for from string.
+	 */
 	public static String getFrom(String from) {
 		if (from.charAt(0) != ':') {
 			return "";
@@ -75,15 +89,22 @@ public final class ChatUtils {
 		return from.substring(1, endIdx);
 	}
 
+	/**
+	 * Parses IRC message into ChatMessage.
+	 */
 	public static ChatMessage parseMessage(String message) {
 		ChatMessage msg = new ChatMessage();
 
+		// By default we have only command and message indices.
 		int fromIdx = -1;
 		int commandIdx = 0;
 		int conversationIdx = -1;
 		int messageIdx = 1;
 
+		// Split message into parts.
 		String parts[] = message.split(" ");
+
+		// If first part starts with a colon it's a from string.
 		if (parts[0].startsWith(":")) {
 			fromIdx = 0;
 			commandIdx = 1;
@@ -114,7 +135,7 @@ public final class ChatUtils {
 			msg.mFrom = getFrom(parts[fromIdx]);
 		}
 		if (conversationIdx >= 0) {
-			msg.mConversation = parts[conversationIdx];
+			msg.mConversationId = parts[conversationIdx];
 		}
 		msg.mMessage = concat(parts, messageIdx, parts.length - 1, true);
 

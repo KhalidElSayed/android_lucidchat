@@ -22,19 +22,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
 
+/**
+ * Chat container view.
+ */
 public class ChatScrollView extends ScrollView {
 
-	private String mConversation;
-	private final ScrollDownRunnable mScrollDownRunnable = new ScrollDownRunnable();
+	private String mConversationId;
+	private ScrollDownRunnable mScrollDownRunnable = new ScrollDownRunnable();
 
+	/**
+	 * Default constructor.
+	 */
 	public ChatScrollView(Context context) {
 		super(context);
 	}
 
+	/**
+	 * Default constructor.
+	 */
 	public ChatScrollView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 
+	/**
+	 * Default constructor.
+	 */
 	public ChatScrollView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
@@ -48,8 +60,11 @@ public class ChatScrollView extends ScrollView {
 		}
 	}
 
-	public String getConversation() {
-		return mConversation;
+	/**
+	 * Getter for conversation id.
+	 */
+	public String getConversationId() {
+		return mConversationId;
 	}
 
 	@Override
@@ -58,10 +73,16 @@ public class ChatScrollView extends ScrollView {
 		listView.removeAllViews();
 	}
 
-	public void setConversation(String conversation) {
-		mConversation = conversation;
+	/**
+	 * Setter for conversation id.
+	 */
+	public void setConversationId(String conversationId) {
+		mConversationId = conversationId;
 	}
 
+	/**
+	 * Private runnable for handling scroll down events.
+	 */
 	private class ScrollDownRunnable implements Runnable {
 		@Override
 		public void run() {

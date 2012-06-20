@@ -16,5 +16,8 @@
 
 package fi.harism.lucidchat;
 
+/**
+ * Dummy interface for local binding only.
+ */
 interface IChatService {
 }

@@ -118,10 +118,11 @@ public class ChatService extends Service {
 		if (mObserver != null) {
 			mObserver.onChatMessage(message);
 		}
-		if (mConversationMap.get(message.mConversation) == null) {
-			mConversationMap.put(message.mConversation, new ChatConversation());
+		if (mConversationMap.get(message.mConversationId) == null) {
+			mConversationMap.put(message.mConversationId,
+					new ChatConversation());
 		}
-		mConversationMap.get(message.mConversation).addMessage(message);
+		mConversationMap.get(message.mConversationId).addMessage(message);
 	}
 
 	public void sendMessage(String message) {
@@ -192,13 +193,13 @@ public class ChatService extends Service {
 					msg.mFrom = "";
 				}
 
-				if (!msg.mFrom.equals("") && msg.mConversation.equals(mNick)) {
-					msg.mConversation = msg.mFrom;
+				if (!msg.mFrom.equals("") && msg.mConversationId.equals(mNick)) {
+					msg.mConversationId = msg.mFrom;
 				}
-				if (msg.mConversation.equals("*")
-						|| msg.mConversation.equals(mHost)
-						|| msg.mConversation.equals(mNick)) {
-					msg.mConversation = "";
+				if (msg.mConversationId.equals("*")
+						|| msg.mConversationId.equals(mHost)
+						|| msg.mConversationId.equals(mNick)) {
+					msg.mConversationId = "";
 				}
 
 				postChatEvent(msg);

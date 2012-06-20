@@ -148,19 +148,19 @@ public class ChatActivity extends Activity {
 
 		private void onChatMessageImpl(ChatMessage msg) {
 			ChatScrollView cScrollView = mPagerAdapter
-					.getScrollView(msg.mConversation);
+					.getScrollView(msg.mConversationId);
 
 			if (cScrollView == null) {
 				cScrollView = (ChatScrollView) getLayoutInflater().inflate(
 						R.layout.chat_scrollview, null);
-				cScrollView.setConversation(msg.mConversation);
+				cScrollView.setConversationId(msg.mConversationId);
 				mPagerAdapter.addScrollView(cScrollView);
 				mPagerAdapter.notifyDataSetChanged();
 			}
 
 			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 					.inflate(R.layout.chat_textview, null);
-			cTextView.setChatEvent(msg);
+			cTextView.setText(msg);
 			cScrollView.addView(cTextView);
 		}
 
@@ -297,7 +297,7 @@ public class ChatActivity extends Activity {
 		public void onPageSelected(int position) {
 			TextView tv = (TextView) findViewById(R.id.root_conversation);
 			String txt = mPagerAdapter.getScrollView(position)
-					.getConversation();
+					.getConversationId();
 			if (txt.length() > 0) {
 				tv.setVisibility(View.VISIBLE);
 				tv.setText(txt);
@@ -313,8 +313,8 @@ public class ChatActivity extends Activity {
 		private Comparator<ChatScrollView> mComparator = new Comparator<ChatScrollView>() {
 			@Override
 			public int compare(ChatScrollView c1, ChatScrollView c2) {
-				return c1.getConversation().compareToIgnoreCase(
-						c2.getConversation());
+				return c1.getConversationId().compareToIgnoreCase(
+						c2.getConversationId());
 			}
 		};
 		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
@@ -337,9 +337,9 @@ public class ChatActivity extends Activity {
 			return mViews.get(position);
 		}
 
-		public ChatScrollView getScrollView(String conversation) {
+		public ChatScrollView getScrollView(String conversationId) {
 			for (ChatScrollView csv : mViews) {
-				if (csv.getConversation().equals(conversation)) {
+				if (csv.getConversationId().equals(conversationId)) {
 					return csv;
 				}
 			}
@@ -386,11 +386,11 @@ public class ChatActivity extends Activity {
 						for (ChatMessage message : conversation.getMessages()) {
 							ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 									.inflate(R.layout.chat_textview, null);
-							cTextView.setChatEvent(message);
+							cTextView.setText(message);
 							cScrollView.addView(cTextView);
 						}
 					}
-					cScrollView.setConversation(id);
+					cScrollView.setConversationId(id);
 					mPagerAdapter.addScrollView(cScrollView);
 				}
 				mPagerAdapter.notifyDataSetChanged();
