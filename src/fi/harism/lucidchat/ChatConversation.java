@@ -25,10 +25,13 @@ public class ChatConversation {
 	public static final String MODE_OPERATOR = "@";
 	public static final String MODE_VOICE = "+";
 
+	private String mId;
 	private final Vector<ChatMessage> mMessages = new Vector<ChatMessage>();
+
 	private final Vector<String> mParticipants = new Vector<String>();
 
-	public ChatConversation() {
+	public ChatConversation(String id) {
+		mId = id;
 	}
 
 	public void addMessage(ChatMessage message) {
@@ -66,6 +69,11 @@ public class ChatConversation {
 
 	public List<String> getParticipants() {
 		return mParticipants;
+	}
+
+	public boolean isChannel() {
+		char c = mId.charAt(0);
+		return c == '#' || c == '+' || c == '!' || c == '&';
 	}
 
 	public void removeNick(String nick) {

@@ -33,6 +33,7 @@ import android.widget.TextView;
  */
 public class ChatTextView extends TextView {
 
+	private static final int COLOR_ACTION = 0xFF90B0A0;
 	// Constant color values.
 	private static final int COLOR_ERROR = 0xFFE26E9B;
 	private static final int COLOR_LINK = 0xFFAACB63;
@@ -95,7 +96,7 @@ public class ChatTextView extends TextView {
 			color = COLOR_MESSAGE;
 		}
 		if (event.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
-			color = COLOR_NOTICE;
+			color = COLOR_ACTION;
 		}
 		if (event.mCommand == ChatMessage.CMD_EXCEPTION
 				|| event.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {

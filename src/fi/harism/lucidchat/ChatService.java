@@ -75,7 +75,7 @@ public class ChatService extends Service {
 			id = "";
 		}
 		if (!mConversationMap.containsKey(id)) {
-			mConversationMap.put(id, new ChatConversation());
+			mConversationMap.put(id, new ChatConversation(id));
 		}
 		return mConversationMap.get(id);
 	}
@@ -119,8 +119,8 @@ public class ChatService extends Service {
 			mObserver.onChatMessage(message);
 		}
 		if (mConversationMap.get(message.mConversationId) == null) {
-			mConversationMap.put(message.mConversationId,
-					new ChatConversation());
+			mConversationMap.put(message.mConversationId, new ChatConversation(
+					message.mConversationId));
 		}
 		mConversationMap.get(message.mConversationId).addMessage(message);
 	}

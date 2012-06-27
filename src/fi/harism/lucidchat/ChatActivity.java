@@ -155,7 +155,6 @@ public class ChatActivity extends Activity {
 						R.layout.chat_scrollview, null);
 				cScrollView.setConversationId(msg.mConversationId);
 				mPagerAdapter.addScrollView(cScrollView);
-				mPagerAdapter.notifyDataSetChanged();
 			}
 
 			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
@@ -187,38 +186,7 @@ public class ChatActivity extends Activity {
 			case R.id.root_footer_send: {
 				EditText edit = (EditText) findViewById(R.id.root_footer_edit);
 				String txt = edit.getText().toString().trim();
-				if (txt.length() > 0) {
-					String txtUpper = txt.toUpperCase();
-					if (txtUpper.startsWith("/JOIN ")) {
-						txt = "JOIN " + txt.substring(5).trim();
-						if (txt.trim().length() == 4) {
-							txt = "";
-						}
-					}
-					if (txtUpper.startsWith("/MSG ")) {
-						String cmd = "PRIVMSG ";
-						String to = txt.substring(4).trim();
-						int spaceIdx = to.indexOf(' ');
-						if (spaceIdx > 0) {
-							String msg = to.substring(spaceIdx + 1);
-							if (msg.length() > 0) {
-								to = to.substring(0, spaceIdx + 1);
-								txt = cmd + to + ":" + msg;
-							} else {
-								txt = "";
-							}
-						} else {
-							txt = "";
-						}
-					}
-					if (txtUpper.startsWith("/ME ")) {
-						txt = "PRIVMSG harism :" + "\u0001ACTION "
-								+ txt.substring(4);
-					}
-
-					if (txt.length() > 0) {
-						mChatService.sendMessage(txt);
-					}
+				if (sendImpl(txt)) {
 					edit.setText("");
 				}
 				break;
@@ -279,6 +247,36 @@ public class ChatActivity extends Activity {
 			}
 			}
 		}
+
+		private boolean sendImpl(String msg) {
+			String conversation = (String) ((TextView) findViewById(R.id.root_conversation))
+					.getText();
+			String parts[] = msg.split(" ");
+			if (parts.length >= 2 && parts[0].toUpperCase().equals("/JOIN")) {
+				mChatService.sendMessage("JOIN "
+						+ ChatUtils.concat(parts, 1, parts.length - 1, false));
+				return true;
+			}
+			if (parts.length >= 2 && parts[0].toUpperCase().equals("/ME")
+					&& conversation.length() > 0) {
+				mChatService.sendMessage("PRIVMSG " + conversation
+						+ " :\u0001ACTION "
+						+ ChatUtils.concat(parts, 1, parts.length - 1, false));
+				return true;
+			}
+			if (parts.length >= 3 && parts[0].toUpperCase().equals("/MSG")) {
+				mChatService.sendMessage("PRIVMSG " + parts[1] + " :"
+						+ ChatUtils.concat(parts, 2, parts.length - 1, false));
+				return true;
+			}
+			if (parts.length > 0 && conversation.length() > 0) {
+				mChatService.sendMessage("PRIVMSG " + conversation + " :"
+						+ ChatUtils.concat(parts, 0, parts.length - 1, false));
+				return true;
+			}
+
+			return false;
+		}
 	}
 
 	private class OnPageChangeListenerImpl implements
@@ -321,6 +319,8 @@ public class ChatActivity extends Activity {
 
 		public void addScrollView(ChatScrollView view) {
 			mViews.add(view);
+			Collections.sort(mViews, mComparator);
+			notifyDataSetChanged();
 		}
 
 		@Override
@@ -348,6 +348,7 @@ public class ChatActivity extends Activity {
 
 		@Override
 		public Object instantiateItem(ViewGroup collection, int position) {
+			collection.removeView(mViews.get(position));
 			((ViewPager) collection).addView(mViews.get(position));
 			return mViews.get(position);
 		}
@@ -359,12 +360,12 @@ public class ChatActivity extends Activity {
 
 		public void removeScrollView(ChatScrollView view) {
 			mViews.remove(view);
+			notifyDataSetChanged();
 		}
 
 		@Override
 		public void startUpdate(ViewGroup collection) {
 			super.startUpdate(collection);
-			Collections.sort(mViews, mComparator);
 		}
 
 	}
@@ -393,7 +394,6 @@ public class ChatActivity extends Activity {
 					cScrollView.setConversationId(id);
 					mPagerAdapter.addScrollView(cScrollView);
 				}
-				mPagerAdapter.notifyDataSetChanged();
 				setSendEnabled(true);
 				Button connect = (Button) findViewById(R.id.root_header_connect);
 				connect.setText(R.string.root_header_disconnect);
