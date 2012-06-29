@@ -35,7 +35,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import fi.harism.lucidchat.IChatService.Stub;
 
 public class ChatActivity extends Activity {
@@ -49,6 +48,7 @@ public class ChatActivity extends Activity {
 	private ChatDlgError mDlgError;
 	private ChatDlgLogin mDlgLogin;
 	private FlipAdapterImpl mFlipAdapter = new FlipAdapterImpl();
+	private ChatFlipView mFlipView;
 	private OnClickListenerImpl mOnClickListener = new OnClickListenerImpl();
 	private ServiceConnectionImpl mServiceConnection = new ServiceConnectionImpl();
 
@@ -65,13 +65,13 @@ public class ChatActivity extends Activity {
 		findViewById(R.id.root_footer_send)
 				.setOnClickListener(mOnClickListener);
 
-		ChatScrollView cScrollView = (ChatScrollView) getLayoutInflater()
-				.inflate(R.layout.chat_scrollview, null);
-		cScrollView.setConversationId("");
-		mFlipAdapter.addScrollView(cScrollView);
+		ChatView chatView = (ChatView) getLayoutInflater().inflate(
+				R.layout.chat_view, null);
+		chatView.setConversationId("");
+		mFlipAdapter.addChatView(chatView);
 
-		ChatFlipView flipView = (ChatFlipView) findViewById(R.id.root_flipview);
-		flipView.setAdapter(mFlipAdapter);
+		mFlipView = (ChatFlipView) findViewById(R.id.root_flipview);
+		mFlipView.setAdapter(mFlipAdapter);
 
 		setSendEnabled(false);
 
@@ -110,20 +110,19 @@ public class ChatActivity extends Activity {
 		}
 
 		private void onChatMessageImpl(ChatMessage msg) {
-			ChatScrollView cScrollView = mFlipAdapter
-					.getScrollView(msg.mConversationId);
+			ChatView chatView = mFlipAdapter.getChatView(msg.mConversationId);
 
-			if (cScrollView == null) {
-				cScrollView = (ChatScrollView) getLayoutInflater().inflate(
-						R.layout.chat_scrollview, null);
-				cScrollView.setConversationId(msg.mConversationId);
-				mFlipAdapter.addScrollView(cScrollView);
+			if (chatView == null) {
+				chatView = (ChatView) getLayoutInflater().inflate(
+						R.layout.chat_view, null);
+				chatView.setConversationId(msg.mConversationId);
+				mFlipAdapter.addChatView(chatView);
 			}
 
 			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 					.inflate(R.layout.chat_textview, null);
 			cTextView.setText(msg);
-			cScrollView.addView(cTextView);
+			chatView.addView(cTextView);
 		}
 
 		@Override
@@ -144,16 +143,16 @@ public class ChatActivity extends Activity {
 
 	private class FlipAdapterImpl extends ChatFlipAdapter {
 
-		private Comparator<ChatScrollView> mComparator = new Comparator<ChatScrollView>() {
+		private Comparator<ChatView> mComparator = new Comparator<ChatView>() {
 			@Override
-			public int compare(ChatScrollView c1, ChatScrollView c2) {
+			public int compare(ChatView c1, ChatView c2) {
 				return c1.getConversationId().compareToIgnoreCase(
 						c2.getConversationId());
 			}
 		};
-		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
+		private Vector<ChatView> mViews = new Vector<ChatView>();
 
-		public void addScrollView(ChatScrollView view) {
+		public void addChatView(ChatView view) {
 			mViews.add(view);
 			Collections.sort(mViews, mComparator);
 			notifyDataSetChanged();
@@ -165,17 +164,12 @@ public class ChatActivity extends Activity {
 			return mViews.get(position);
 		}
 
-		@Override
-		public int getCount() {
-			return mViews.size();
-		}
-
-		public ChatScrollView getScrollView(int position) {
+		public ChatView getChatView(int position) {
 			return mViews.get(position);
 		}
 
-		public ChatScrollView getScrollView(String conversationId) {
-			for (ChatScrollView csv : mViews) {
+		public ChatView getChatView(String conversationId) {
+			for (ChatView csv : mViews) {
 				if (csv.getConversationId().equals(conversationId)) {
 					return csv;
 				}
@@ -183,7 +177,12 @@ public class ChatActivity extends Activity {
 			return null;
 		}
 
-		public void removeScrollView(ChatScrollView view) {
+		@Override
+		public int getCount() {
+			return mViews.size();
+		}
+
+		public void removeChatView(ChatView view) {
 			mViews.remove(view);
 			notifyDataSetChanged();
 		}
@@ -260,8 +259,8 @@ public class ChatActivity extends Activity {
 		}
 
 		private boolean sendImpl(String msg) {
-			String conversation = (String) ((TextView) findViewById(R.id.root_conversation))
-					.getText();
+			String conversation = mFlipAdapter.getChatView(
+					mFlipView.getCurrentIndex()).getConversationId();
 			String parts[] = msg.split(" ");
 			if (parts.length >= 2 && parts[0].toUpperCase().equals("/JOIN")) {
 				mChatService.sendMessage("JOIN "
@@ -301,18 +300,18 @@ public class ChatActivity extends Activity {
 				for (String id : mChatService.getConversationIds()) {
 					ChatConversation conversation = mChatService
 							.getConversation(id);
-					ChatScrollView cScrollView = (ChatScrollView) getLayoutInflater()
-							.inflate(R.layout.chat_scrollview, null);
+					ChatView chatView = (ChatView) getLayoutInflater().inflate(
+							R.layout.chat_view, null);
 					if (conversation != null) {
 						for (ChatMessage message : conversation.getMessages()) {
 							ChatTextView cTextView = (ChatTextView) getLayoutInflater()
 									.inflate(R.layout.chat_textview, null);
 							cTextView.setText(message);
-							cScrollView.addView(cTextView);
+							chatView.addView(cTextView);
 						}
 					}
-					cScrollView.setConversationId(id);
-					mFlipAdapter.addScrollView(cScrollView);
+					chatView.setConversationId(id);
+					mFlipAdapter.addChatView(chatView);
 				}
 				setSendEnabled(true);
 				Button connect = (Button) findViewById(R.id.root_header_connect);

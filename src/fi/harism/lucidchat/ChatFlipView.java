@@ -97,6 +97,10 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 		init(context);
 	}
 
+	public int getCurrentIndex() {
+		return mViewChildIndex;
+	}
+
 	private void init(Context context) {
 		mFlipRenderer = new FlipRenderer(context);
 

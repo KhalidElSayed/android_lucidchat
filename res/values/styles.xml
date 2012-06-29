@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="textview">
         <item name="android:typeface">monospace</item>
@@ -53,7 +53,7 @@
     </style>
 
     <style name="textview_conversation" parent="textview">
-        <item name="android:layout_below">@id/header</item>
+        <item name="android:layout_alignParentTop">true</item>
         <item name="android:layout_alignParentRight">true</item>
         <item name="android:paddingLeft">5dp</item>
         <item name="android:paddingRight">5dp</item>
