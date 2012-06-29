@@ -57,6 +57,8 @@ public class ChatView extends RelativeLayout {
 			tv.setVisibility(View.GONE);
 		} else {
 			tv.setVisibility(View.VISIBLE);
+			tv.setTextColor(tv.getTextColors().withAlpha(0x80));
+			tv.getBackground().setAlpha(0x80);
 		}
 	}
 
