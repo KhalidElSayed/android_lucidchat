@@ -8,6 +8,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.PointF;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
@@ -74,8 +75,10 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 			+ "  vPos = aPos;                                       \r\n"
 			+ "}                                                    \r\n";
 
+	private DataSetObserver mDataSetObserver = new DataSetObserver();
 	private int mFlipMode = FLIP_NONE;
 	private FlipRenderer mFlipRenderer;
+	private PointF mTouchPos = new PointF();
 	private int mViewChildIndex = 0;
 	private View[] mViewChildren = new View[0];
 
@@ -107,28 +110,51 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 	public boolean onTouch(View view, MotionEvent event) {
 		view.onTouchEvent(event);
 
+		if (mFlipMode == FLIP_NONE) {
+			switch (event.getAction()) {
+			case MotionEvent.ACTION_DOWN:
+			case MotionEvent.ACTION_MOVE:
+				if (mTouchPos.x == 0 && mTouchPos.y == 0) {
+					mTouchPos.set(event.getX(), event.getY());
+					return true;
+				} else if (Math.abs(event.getX() - mTouchPos.x) > Math
+						.abs(event.getY() - mTouchPos.y)) {
+					mTouchPos.set(0, 0);
+				} else {
+					mTouchPos.set(0, 0);
+					return true;
+				}
+				break;
+			case MotionEvent.ACTION_UP:
+				mTouchPos.set(0, 0);
+				return true;
+			}
+		}
+		if (event.getAction() == MotionEvent.ACTION_UP) {
+			mTouchPos.set(0, 0);
+		}
+
 		float mx = event.getX();
 		switch (event.getAction()) {
 
 		case MotionEvent.ACTION_DOWN:
 		case MotionEvent.ACTION_MOVE:
 			if (mFlipMode != FLIP_NONE) {
-				// updateRendererBitmaps();
 				float fp = (2 * mx - getWidth()) / getWidth();
 				fp = Math.min(1f, Math.max(-1f, fp));
 				mFlipRenderer.moveFlipPosition(fp);
 			} else {
-				if (mx * 3 > getWidth() * 2
+				if (mx * 2 > getWidth()
 						&& mViewChildIndex < mViewChildren.length - 1) {
 					mFlipMode = FLIP_NEXT;
-					updateRendererBitmaps();
+					updateRendererBitmaps(mViewChildIndex, mViewChildIndex + 1);
 					mFlipRenderer.bringToFront();
 					mFlipRenderer.setFlipPosition(1f);
 					invalidate();
 				}
-				if (mx * 3 < getWidth() && mViewChildIndex > 0) {
+				if (mx * 2 < getWidth() && mViewChildIndex > 0) {
 					mFlipMode = FLIP_PREV;
-					updateRendererBitmaps();
+					updateRendererBitmaps(mViewChildIndex - 1, mViewChildIndex);
 					mFlipRenderer.bringToFront();
 					mFlipRenderer.setFlipPosition(-1f);
 					invalidate();
@@ -158,6 +184,8 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 	 *            View Adapter.
 	 */
 	public void setAdapter(ChatFlipAdapter adapter) {
+		adapter.setObserver(mDataSetObserver);
+
 		int count = adapter.getCount();
 		mViewChildren = new View[count];
 		for (int i = 0; i < count; ++i) {
@@ -170,7 +198,7 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 	/**
 	 * Setter for current visible View.
 	 */
-	private void setCurrentView(int index) {
+	public void setCurrentView(int index) {
 		if (index >= 0 && index < mViewChildren.length) {
 			setViewVisibility(mViewChildren[index], View.VISIBLE);
 			mViewChildren[index].bringToFront();
@@ -209,7 +237,7 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 	/**
 	 * Updates renderer Bitmaps.
 	 */
-	private void updateRendererBitmaps() {
+	private void updateRendererBitmaps(int leftIdx, int rightIdx) {
 
 		// Generate two offscreen bitmaps.
 		Bitmap left = Bitmap.createBitmap(getWidth(), getHeight(),
@@ -217,34 +245,32 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 		Bitmap right = Bitmap.createBitmap(getWidth(), getHeight(),
 				Bitmap.Config.ARGB_8888);
 
-		if (mFlipMode == FLIP_NEXT) {
-			Canvas c = new Canvas(left);
-			View v = mViewChildren[mViewChildIndex];
-			c.translate(-v.getScrollX(), -v.getScrollY());
-			v.draw(c);
-		}
-		if (mFlipMode == FLIP_NEXT
-				&& mViewChildIndex < mViewChildren.length - 1) {
-			Canvas c = new Canvas(right);
-			View v = mViewChildren[mViewChildIndex + 1];
-			c.translate(-v.getScrollX(), -v.getScrollY());
-			v.draw(c);
-		}
+		Canvas c = new Canvas(left);
+		View v = mViewChildren[leftIdx];
+		c.translate(-v.getScrollX(), -v.getScrollY());
+		v.draw(c);
 
-		if (mFlipMode == FLIP_PREV) {
-			Canvas c = new Canvas(right);
-			View v = mViewChildren[mViewChildIndex];
-			c.translate(-v.getScrollX(), -v.getScrollY());
-			v.draw(c);
-		}
-		if (mFlipMode == FLIP_PREV && mViewChildIndex > 0) {
-			Canvas c = new Canvas(left);
-			View v = mViewChildren[mViewChildIndex - 1];
-			c.translate(-v.getScrollX(), -v.getScrollY());
-			v.draw(c);
-		}
+		c = new Canvas(right);
+		v = mViewChildren[rightIdx];
+		c.translate(-v.getScrollX(), -v.getScrollY());
+		v.draw(c);
 
 		mFlipRenderer.setBitmaps(left, right);
+	}
+
+	private class DataSetObserver implements ChatFlipAdapter.Observer {
+
+		@Override
+		public void onDataSetChanged(ChatFlipAdapter adapter) {
+			int count = adapter.getCount();
+			mViewChildren = new View[count];
+			for (int i = 0; i < count; ++i) {
+				mViewChildren[i] = adapter.createView(ChatFlipView.this, i);
+			}
+			mViewChildIndex = Math.min(mViewChildIndex, count - 1);
+			setCurrentView(mViewChildIndex);
+		}
+
 	}
 
 	private class FlipRenderer extends GLSurfaceView implements
@@ -345,7 +371,6 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 				}
 			}
 
-			// If we have new Bitmaps.
 			if (mBitmapLeft != null) {
 				GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureIds[0]);
 				GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mBitmapLeft, 0);
@@ -432,13 +457,9 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 		/**
 		 * Setter for Bitmaps.
 		 */
-		public void setBitmaps(Bitmap left, Bitmap right) {
-			if (left != null) {
-				mBitmapLeft = left;
-			}
-			if (right != null) {
-				mBitmapRight = right;
-			}
+		public void setBitmaps(Bitmap bitmapLeft, Bitmap bitmapRight) {
+			mBitmapLeft = bitmapLeft;
+			mBitmapRight = bitmapRight;
 		}
 
 		/**

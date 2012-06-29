@@ -156,21 +156,13 @@ public class ChatActivity extends Activity {
 		public void addScrollView(ChatScrollView view) {
 			mViews.add(view);
 			Collections.sort(mViews, mComparator);
-			// notifyDataSetChanged();
-
-			ChatFlipView flipView = (ChatFlipView) findViewById(R.id.root_flipview);
-			flipView.setAdapter(mFlipAdapter);
+			notifyDataSetChanged();
 		}
 
 		@Override
 		public View createView(ViewGroup container, int position) {
 			container.removeView(mViews.get(position));
 			return mViews.get(position);
-		}
-
-		// @Override
-		public void destroyItem(ViewGroup collection, int position, Object obj) {
-			collection.removeView((View) obj);
 		}
 
 		@Override
@@ -191,26 +183,9 @@ public class ChatActivity extends Activity {
 			return null;
 		}
 
-		// @Override
-		public Object instantiateItem(ViewGroup collection, int position) {
-			collection.removeView(mViews.get(position));
-			collection.addView(mViews.get(position));
-			return mViews.get(position);
-		}
-
-		// @Override
-		public boolean isViewFromObject(View view, Object obj) {
-			return view == obj;
-		}
-
 		public void removeScrollView(ChatScrollView view) {
 			mViews.remove(view);
-			// notifyDataSetChanged();
-		}
-
-		// @Override
-		public void startUpdate(ViewGroup collection) {
-			// super.startUpdate(collection);
+			notifyDataSetChanged();
 		}
 
 	}
