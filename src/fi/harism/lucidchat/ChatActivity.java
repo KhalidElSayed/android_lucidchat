@@ -28,8 +28,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -42,10 +40,6 @@ import fi.harism.lucidchat.IChatService.Stub;
 
 public class ChatActivity extends Activity {
 
-	private static final String KEY_DLGERROR = "mDlgError";
-	private static final String KEY_DLGERROR_MESSAGE = "mDlgError.message";
-
-	private static final String KEY_DLGLOGIN = "mDlgLogin";
 	private static final String KEY_DLGLOGIN_HOST = "mDlgLogin.host";
 	private static final String KEY_DLGLOGIN_NICK = "mDlgLogin.nick";
 	private static final String KEY_DLGLOGIN_PORT = "mDlgLogin.port";
@@ -54,9 +48,8 @@ public class ChatActivity extends Activity {
 	private ChatService.Observer mChatServiceObserver = new ChatServiceObserver();
 	private ChatDlgError mDlgError;
 	private ChatDlgLogin mDlgLogin;
+	private FlipAdapterImpl mFlipAdapter = new FlipAdapterImpl();
 	private OnClickListenerImpl mOnClickListener = new OnClickListenerImpl();
-	private ViewPager.OnPageChangeListener mOnPageChangeListener = new OnPageChangeListenerImpl();
-	private PagerAdapterImpl mPagerAdapter = new PagerAdapterImpl();
 	private ServiceConnectionImpl mServiceConnection = new ServiceConnectionImpl();
 
 	@Override
@@ -72,9 +65,13 @@ public class ChatActivity extends Activity {
 		findViewById(R.id.root_footer_send)
 				.setOnClickListener(mOnClickListener);
 
-		ViewPager viewPager = (ViewPager) findViewById(R.id.root_viewpager);
-		viewPager.setAdapter(mPagerAdapter);
-		viewPager.setOnPageChangeListener(mOnPageChangeListener);
+		ChatScrollView cScrollView = (ChatScrollView) getLayoutInflater()
+				.inflate(R.layout.chat_scrollview, null);
+		cScrollView.setConversationId("");
+		mFlipAdapter.addScrollView(cScrollView);
+
+		ChatFlipView flipView = (ChatFlipView) findViewById(R.id.root_flipview);
+		flipView.setAdapter(mFlipAdapter);
 
 		setSendEnabled(false);
 
@@ -87,40 +84,6 @@ public class ChatActivity extends Activity {
 		super.onDestroy();
 		if (mChatService != null) {
 			unbindService(mServiceConnection);
-		}
-	}
-
-	@Override
-	public void onRestoreInstanceState(Bundle bundle) {
-		if (bundle.getBoolean(KEY_DLGLOGIN)) {
-			mDlgLogin = new ChatDlgLogin(this);
-			mDlgLogin.setOnClickListener(mOnClickListener);
-			mDlgLogin.setNick(bundle.getString(KEY_DLGLOGIN_NICK));
-			mDlgLogin.setHost(bundle.getString(KEY_DLGLOGIN_HOST));
-			mDlgLogin.setPort(bundle.getInt(KEY_DLGLOGIN_PORT));
-			mDlgLogin.show();
-		}
-		if (bundle.getBoolean(KEY_DLGERROR)) {
-			mDlgError = new ChatDlgError(this);
-			mDlgError.setOnClickListener(mOnClickListener);
-			mDlgError.setMessage(bundle.getString(KEY_DLGERROR_MESSAGE));
-			mDlgError.show();
-		}
-	}
-
-	@Override
-	public void onSaveInstanceState(Bundle bundle) {
-		if (mDlgLogin != null) {
-			bundle.putBoolean(KEY_DLGLOGIN, true);
-			bundle.putString(KEY_DLGLOGIN_NICK, mDlgLogin.getNick());
-			bundle.putString(KEY_DLGLOGIN_HOST, mDlgLogin.getHost());
-			bundle.putInt(KEY_DLGLOGIN_PORT, mDlgLogin.getPort());
-			mDlgLogin.dismiss();
-		}
-		if (mDlgError != null) {
-			bundle.putBoolean(KEY_DLGERROR, true);
-			bundle.putString(KEY_DLGERROR_MESSAGE, mDlgError.getMessage());
-			mDlgError.dismiss();
 		}
 	}
 
@@ -147,14 +110,14 @@ public class ChatActivity extends Activity {
 		}
 
 		private void onChatMessageImpl(ChatMessage msg) {
-			ChatScrollView cScrollView = mPagerAdapter
+			ChatScrollView cScrollView = mFlipAdapter
 					.getScrollView(msg.mConversationId);
 
 			if (cScrollView == null) {
 				cScrollView = (ChatScrollView) getLayoutInflater().inflate(
 						R.layout.chat_scrollview, null);
 				cScrollView.setConversationId(msg.mConversationId);
-				mPagerAdapter.addScrollView(cScrollView);
+				mFlipAdapter.addScrollView(cScrollView);
 			}
 
 			ChatTextView cTextView = (ChatTextView) getLayoutInflater()
@@ -175,6 +138,79 @@ public class ChatActivity extends Activity {
 
 		private void onConnectedImpl(boolean connected) {
 			setSendEnabled(connected);
+		}
+
+	}
+
+	private class FlipAdapterImpl extends ChatFlipAdapter {
+
+		private Comparator<ChatScrollView> mComparator = new Comparator<ChatScrollView>() {
+			@Override
+			public int compare(ChatScrollView c1, ChatScrollView c2) {
+				return c1.getConversationId().compareToIgnoreCase(
+						c2.getConversationId());
+			}
+		};
+		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
+
+		public void addScrollView(ChatScrollView view) {
+			mViews.add(view);
+			Collections.sort(mViews, mComparator);
+			// notifyDataSetChanged();
+
+			ChatFlipView flipView = (ChatFlipView) findViewById(R.id.root_flipview);
+			flipView.setAdapter(mFlipAdapter);
+		}
+
+		@Override
+		public View createView(ViewGroup container, int position) {
+			container.removeView(mViews.get(position));
+			return mViews.get(position);
+		}
+
+		// @Override
+		public void destroyItem(ViewGroup collection, int position, Object obj) {
+			collection.removeView((View) obj);
+		}
+
+		@Override
+		public int getCount() {
+			return mViews.size();
+		}
+
+		public ChatScrollView getScrollView(int position) {
+			return mViews.get(position);
+		}
+
+		public ChatScrollView getScrollView(String conversationId) {
+			for (ChatScrollView csv : mViews) {
+				if (csv.getConversationId().equals(conversationId)) {
+					return csv;
+				}
+			}
+			return null;
+		}
+
+		// @Override
+		public Object instantiateItem(ViewGroup collection, int position) {
+			collection.removeView(mViews.get(position));
+			collection.addView(mViews.get(position));
+			return mViews.get(position);
+		}
+
+		// @Override
+		public boolean isViewFromObject(View view, Object obj) {
+			return view == obj;
+		}
+
+		public void removeScrollView(ChatScrollView view) {
+			mViews.remove(view);
+			// notifyDataSetChanged();
+		}
+
+		// @Override
+		public void startUpdate(ViewGroup collection) {
+			// super.startUpdate(collection);
 		}
 
 	}
@@ -279,97 +315,6 @@ public class ChatActivity extends Activity {
 		}
 	}
 
-	private class OnPageChangeListenerImpl implements
-			ViewPager.OnPageChangeListener {
-
-		@Override
-		public void onPageScrolled(int position, float positionOffset,
-				int positionOffsetPixels) {
-		}
-
-		@Override
-		public void onPageScrollStateChanged(int state) {
-		}
-
-		@Override
-		public void onPageSelected(int position) {
-			TextView tv = (TextView) findViewById(R.id.root_conversation);
-			String txt = mPagerAdapter.getScrollView(position)
-					.getConversationId();
-			if (txt.length() > 0) {
-				tv.setVisibility(View.VISIBLE);
-				tv.setText(txt);
-			} else {
-				tv.setVisibility(View.GONE);
-			}
-		}
-
-	}
-
-	private class PagerAdapterImpl extends PagerAdapter {
-
-		private Comparator<ChatScrollView> mComparator = new Comparator<ChatScrollView>() {
-			@Override
-			public int compare(ChatScrollView c1, ChatScrollView c2) {
-				return c1.getConversationId().compareToIgnoreCase(
-						c2.getConversationId());
-			}
-		};
-		private Vector<ChatScrollView> mViews = new Vector<ChatScrollView>();
-
-		public void addScrollView(ChatScrollView view) {
-			mViews.add(view);
-			Collections.sort(mViews, mComparator);
-			notifyDataSetChanged();
-		}
-
-		@Override
-		public void destroyItem(ViewGroup collection, int position, Object obj) {
-			((ViewPager) collection).removeView((View) obj);
-		}
-
-		@Override
-		public int getCount() {
-			return mViews.size();
-		}
-
-		public ChatScrollView getScrollView(int position) {
-			return mViews.get(position);
-		}
-
-		public ChatScrollView getScrollView(String conversationId) {
-			for (ChatScrollView csv : mViews) {
-				if (csv.getConversationId().equals(conversationId)) {
-					return csv;
-				}
-			}
-			return null;
-		}
-
-		@Override
-		public Object instantiateItem(ViewGroup collection, int position) {
-			collection.removeView(mViews.get(position));
-			((ViewPager) collection).addView(mViews.get(position));
-			return mViews.get(position);
-		}
-
-		@Override
-		public boolean isViewFromObject(View view, Object obj) {
-			return view == obj;
-		}
-
-		public void removeScrollView(ChatScrollView view) {
-			mViews.remove(view);
-			notifyDataSetChanged();
-		}
-
-		@Override
-		public void startUpdate(ViewGroup collection) {
-			super.startUpdate(collection);
-		}
-
-	}
-
 	private class ServiceConnectionImpl implements ServiceConnection {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -392,7 +337,7 @@ public class ChatActivity extends Activity {
 						}
 					}
 					cScrollView.setConversationId(id);
-					mPagerAdapter.addScrollView(cScrollView);
+					mFlipAdapter.addScrollView(cScrollView);
 				}
 				setSendEnabled(true);
 				Button connect = (Button) findViewById(R.id.root_header_connect);
