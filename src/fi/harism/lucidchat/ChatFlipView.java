@@ -121,7 +121,7 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 				if (mTouchPos.x == 0 && mTouchPos.y == 0) {
 					mTouchPos.set(event.getX(), event.getY());
 					return true;
-				} else if (Math.abs(event.getX() - mTouchPos.x) > Math
+				} else if (Math.abs(event.getX() - mTouchPos.x) > 2 * Math
 						.abs(event.getY() - mTouchPos.y)) {
 					mTouchPos.set(0, 0);
 				} else {
@@ -271,7 +271,7 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 			for (int i = 0; i < count; ++i) {
 				mViewChildren[i] = adapter.createView(ChatFlipView.this, i);
 			}
-			mViewChildIndex = Math.min(mViewChildIndex, count - 1);
+			mViewChildIndex = Math.max(0, Math.min(mViewChildIndex, count - 1));
 			setCurrentView(mViewChildIndex);
 		}
 

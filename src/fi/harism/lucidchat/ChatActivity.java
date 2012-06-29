@@ -297,6 +297,11 @@ public class ChatActivity extends Activity {
 					.getChatService();
 			mChatService.setObserver(mChatServiceObserver);
 			if (mChatService.isConnected()) {
+
+				while (mFlipAdapter.getCount() > 0) {
+					mFlipAdapter.removeChatView(mFlipAdapter.getChatView(0));
+				}
+
 				for (String id : mChatService.getConversationIds()) {
 					ChatConversation conversation = mChatService
 							.getConversation(id);
