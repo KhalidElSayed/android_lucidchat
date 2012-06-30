@@ -229,6 +229,11 @@ public class ChatActivity extends Activity {
 					Button connect = (Button) findViewById(R.id.root_header_connect);
 					connect.setText(R.string.root_header_connect);
 					connect.setTag(false);
+
+					while (mFlipAdapter.getCount() > 1) {
+						mFlipAdapter
+								.removeChatView(mFlipAdapter.getChatView(1));
+					}
 				}
 				break;
 			}

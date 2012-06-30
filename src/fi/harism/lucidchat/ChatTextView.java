@@ -89,22 +89,29 @@ public class ChatTextView extends TextView {
 	/**
 	 * Parses text part from ChatMessage.
 	 */
-	private SpannableString getText(ChatMessage event) {
+	private SpannableString getText(ChatMessage msg) {
 		// Choose text color.
 		int color = COLOR_SERVER;
-		if (event.mCommand == ChatMessage.CMD_PRIVMSG) {
+		if (msg.mCommand == ChatMessage.CMD_NICK
+				|| msg.mCommand == ChatMessage.CMD_JOIN
+				|| msg.mCommand == ChatMessage.CMD_PART
+				|| msg.mCommand == ChatMessage.CMD_NAMES
+				|| msg.mCommand == ChatMessage.CMD_NAMES_END) {
+			color = COLOR_NOTICE;
+		}
+		if (msg.mCommand == ChatMessage.CMD_PRIVMSG) {
 			color = COLOR_MESSAGE;
 		}
-		if (event.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
+		if (msg.mCommand == ChatMessage.CMD_PRIVMSG_ACTION) {
 			color = COLOR_ACTION;
 		}
-		if (event.mCommand == ChatMessage.CMD_EXCEPTION
-				|| event.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {
+		if (msg.mCommand == ChatMessage.CMD_EXCEPTION
+				|| msg.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {
 			color = COLOR_ERROR;
 		}
 
 		// Create spannable with chosen color.
-		SpannableString span = new SpannableString(event.mMessage);
+		SpannableString span = new SpannableString(msg.mMessage);
 		span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
 		// Search for links.
 		Linkify.addLinks(span, Linkify.ALL);

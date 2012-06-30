@@ -67,6 +67,7 @@ public class ChatService extends Service {
 			mChatRunnable.disconnect();
 			mChatRunnable = null;
 		}
+		mConversationMap.clear();
 		stopForeground(true);
 	}
 
@@ -114,15 +115,17 @@ public class ChatService extends Service {
 		return false;
 	}
 
-	private void postChatEvent(ChatMessage message) {
+	private void postChatEvent(ChatMessage msg) {
 		if (mObserver != null) {
-			mObserver.onChatMessage(message);
+			mObserver.onChatMessage(msg);
 		}
-		if (mConversationMap.get(message.mConversationId) == null) {
-			mConversationMap.put(message.mConversationId, new ChatConversation(
-					message.mConversationId));
+		ChatConversation c = mConversationMap.get(msg.mConversationId);
+		if (c == null) {
+			c = new ChatConversation(msg.mConversationId);
+			c.addNick(mNick);
+			mConversationMap.put(msg.mConversationId, c);
 		}
-		mConversationMap.get(message.mConversationId).addMessage(message);
+		c.addMessage(msg);
 	}
 
 	public void sendMessage(String message) {
@@ -170,11 +173,16 @@ public class ChatService extends Service {
 		@Override
 		public void onError(String reason) {
 			if (mObserver != null) {
-				ChatMessage event = new ChatMessage();
-				event.mMessage = reason;
-				event.mCommand = ChatMessage.CMD_EXCEPTION;
-				event.mFrom = "";
-				postChatEvent(event);
+				ChatMessage msg = new ChatMessage();
+				msg.mMessage = reason;
+				msg.mCommand = ChatMessage.CMD_EXCEPTION;
+				msg.mFrom = "";
+
+				for (String key : mConversationMap.keySet()) {
+					ChatMessage copy = (ChatMessage) msg.clone();
+					copy.mConversationId = key;
+					postChatEvent(copy);
+				}
 			}
 		}
 
@@ -193,7 +201,77 @@ public class ChatService extends Service {
 					msg.mFrom = "";
 				}
 
-				if (!msg.mFrom.equals("") && msg.mConversationId.equals(mNick)) {
+				if (msg.mCommand == ChatMessage.CMD_NICK) {
+					String from = msg.mFrom;
+					String to = msg.mMessage;
+
+					if (from.equals(mNick)) {
+						mNick = to;
+						String str = getString(R.string.chat_nick_you);
+						msg.mMessage = String.format(str, to);
+					} else {
+						String str = getString(R.string.chat_nick);
+						msg.mMessage = String.format(str, from, to);
+					}
+
+					for (String key : mConversationMap.keySet()) {
+						ChatConversation c = mConversationMap.get(key);
+						if (c.getNicks().contains(from)) {
+							c.changeNick(from, to);
+							ChatMessage copy = (ChatMessage) msg.clone();
+							copy.mConversationId = key;
+							postChatEvent(copy);
+						}
+					}
+					return;
+				}
+
+				if (msg.mCommand == ChatMessage.CMD_NAMES) {
+					ChatConversation c = mConversationMap
+							.get(msg.mConversationId);
+					String nicks[] = msg.mMessage.split(" ");
+					for (String nick : nicks) {
+						c.addNick(nick);
+					}
+					return;
+				}
+				if (msg.mCommand == ChatMessage.CMD_NAMES_END) {
+					ChatConversation c = mConversationMap
+							.get(msg.mConversationId);
+					String str = getString(R.string.chat_join_users);
+					msg.mMessage = String.format(str, c.getNicks().size());
+				}
+
+				if (msg.mCommand == ChatMessage.CMD_JOIN) {
+					msg.mConversationId = msg.mMessage;
+					ChatConversation c = mConversationMap
+							.get(msg.mConversationId);
+					if (c == null) {
+						c = new ChatConversation(msg.mConversationId);
+						mConversationMap.put(msg.mConversationId, c);
+					}
+					if (msg.mFrom.equals(mNick)) {
+						msg.mMessage = getString(R.string.chat_join_you);
+					} else {
+						String str = getString(R.string.chat_join);
+						msg.mMessage = String.format(str, msg.mFrom);
+						c.addNick(msg.mFrom);
+					}
+				}
+				if (msg.mCommand == ChatMessage.CMD_PART) {
+					if (msg.mFrom.equals(mNick)) {
+						mConversationMap.remove(msg.mConversationId);
+						return;
+					} else {
+						String str = getString(R.string.chat_part);
+						msg.mMessage = String.format(str, msg.mFrom,
+								msg.mMessage);
+						mConversationMap.get(msg.mConversationId).removeNick(
+								msg.mFrom);
+					}
+				}
+
+				if (!msg.mFrom.isEmpty() && msg.mConversationId.equals(mNick)) {
 					msg.mConversationId = msg.mFrom;
 				}
 				if (msg.mConversationId.equals("*")

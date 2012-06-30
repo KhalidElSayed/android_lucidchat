@@ -38,8 +38,11 @@ public class ChatConversation {
 		mMessages.add(message);
 	}
 
-	public void addNick(String nick, String mode) {
-		mParticipants.add(mode + nick);
+	public void addNick(String nick) {
+		if (nick.startsWith(MODE_OPERATOR) || nick.startsWith(MODE_VOICE)) {
+			nick = nick.substring(1);
+		}
+		mParticipants.add(nick);
 	}
 
 	public boolean changeNick(String nickFrom, String nickTo) {
@@ -67,7 +70,7 @@ public class ChatConversation {
 		return mMessages;
 	}
 
-	public List<String> getParticipants() {
+	public List<String> getNicks() {
 		return mParticipants;
 	}
 

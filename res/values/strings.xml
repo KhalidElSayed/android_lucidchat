@@ -4,7 +4,15 @@
     <string name="app_name">Lucid Chat</string>
     <string name="root_header_connect">Connect</string>
     <string name="root_header_disconnect">Disconnect</string>
-
+    
+    <!-- Chat messages -->
+    <string name="chat_nick_you">You are now known as %1$s.</string>
+    <string name="chat_nick">%1$s is now known as %2$s.</string>
+    <string name="chat_join">%1$s has joined.</string>
+    <string name="chat_join_you">You have joined.</string>
+    <string name="chat_join_users">There are %1$s users.</string>
+    <string name="chat_part">%1$s has left (\"%2$s\").</string>
+    
     <!-- Login dialog -->
     <string name="dlg_login_title">Login to Server</string>
     <string name="dlg_login_nick">Nickname:</string>

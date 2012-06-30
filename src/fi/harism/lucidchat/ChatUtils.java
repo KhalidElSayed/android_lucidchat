@@ -54,6 +54,12 @@ public final class ChatUtils {
 			if (cmd >= 400 && cmd < 600) {
 				return ChatMessage.CMD_SERVERMSG_ERROR;
 			}
+			if (cmd == 353) {
+				return ChatMessage.CMD_NAMES;
+			}
+			if (cmd == 366) {
+				return ChatMessage.CMD_NAMES_END;
+			}
 			return ChatMessage.CMD_SERVERMSG;
 		} else {
 			if (command.equalsIgnoreCase("PRIVMSG")) {
@@ -64,6 +70,9 @@ public final class ChatUtils {
 			}
 			if (command.equals("JOIN")) {
 				return ChatMessage.CMD_JOIN;
+			}
+			if (command.equals("NICK")) {
+				return ChatMessage.CMD_NICK;
 			}
 			if (command.equals("PART")) {
 				return ChatMessage.CMD_PART;
@@ -117,12 +126,17 @@ public final class ChatUtils {
 			cmd = Integer.parseInt(parts[commandIdx]);
 		}
 
-		if (cmd >= 0 || msg.mCommand == ChatMessage.CMD_PRIVMSG) {
+		if (cmd >= 0 || msg.mCommand == ChatMessage.CMD_PRIVMSG
+				|| msg.mCommand == ChatMessage.CMD_PART) {
 			conversationIdx = commandIdx + 1;
 			messageIdx = conversationIdx + 1;
 		}
-		if (cmd == 353) {
+		if (msg.mCommand == ChatMessage.CMD_NAMES) {
 			conversationIdx = commandIdx + 3;
+			messageIdx = conversationIdx + 1;
+		}
+		if (msg.mCommand == ChatMessage.CMD_NAMES_END) {
+			conversationIdx = commandIdx + 2;
 			messageIdx = conversationIdx + 1;
 		}
 		if (msg.mCommand == ChatMessage.CMD_SERVERMSG_ERROR) {

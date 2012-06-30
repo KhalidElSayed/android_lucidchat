@@ -16,16 +16,19 @@
 
 package fi.harism.lucidchat;
 
-public class ChatMessage {
+public class ChatMessage implements Cloneable {
 
 	public static final int CMD_EXCEPTION = 1;
 	public static final int CMD_JOIN = 2;
-	public static final int CMD_PART = 3;
-	public static final int CMD_PING = 4;
-	public static final int CMD_PRIVMSG = 5;
-	public static final int CMD_PRIVMSG_ACTION = 6;
-	public static final int CMD_SERVERMSG = 7;
-	public static final int CMD_SERVERMSG_ERROR = 8;
+	public static final int CMD_NAMES = 3;
+	public static final int CMD_NAMES_END = 4;
+	public static final int CMD_NICK = 5;
+	public static final int CMD_PART = 6;
+	public static final int CMD_PING = 7;
+	public static final int CMD_PRIVMSG = 8;
+	public static final int CMD_PRIVMSG_ACTION = 9;
+	public static final int CMD_SERVERMSG = 10;
+	public static final int CMD_SERVERMSG_ERROR = 11;
 	public static final int CMD_UNKNOWN = -1;
 
 	public int mCommand;
@@ -34,6 +37,16 @@ public class ChatMessage {
 
 	public ChatMessage() {
 		mTime = System.currentTimeMillis();
+	}
+
+	@Override
+	public Object clone() {
+		try {
+			return super.clone();
+		} catch (CloneNotSupportedException ex) {
+			ex.printStackTrace();
+			return null;
+		}
 	}
 
 }
