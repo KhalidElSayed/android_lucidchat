@@ -65,11 +65,6 @@ public class ChatActivity extends Activity {
 		findViewById(R.id.root_footer_send)
 				.setOnClickListener(mOnClickListener);
 
-		ChatView chatView = (ChatView) getLayoutInflater().inflate(
-				R.layout.chat_view, null);
-		chatView.setConversationId("");
-		mFlipAdapter.addChatView(chatView);
-
 		mFlipView = (ChatFlipView) findViewById(R.id.root_flipview);
 		mFlipView.setAdapter(mFlipAdapter);
 
@@ -155,6 +150,14 @@ public class ChatActivity extends Activity {
 		public void addChatView(ChatView view) {
 			mViews.add(view);
 			Collections.sort(mViews, mComparator);
+
+			mViews.get(0).setText("1/" + mViews.size() + " Status");
+			for (int i = 1; i < mViews.size(); ++i) {
+				ChatView cv = mViews.get(i);
+				cv.setText((i + 1) + "/" + mViews.size() + " "
+						+ cv.getConversationId());
+			}
+
 			notifyDataSetChanged();
 		}
 
@@ -184,6 +187,14 @@ public class ChatActivity extends Activity {
 
 		public void removeChatView(ChatView view) {
 			mViews.remove(view);
+
+			mViews.get(0).setText("1/" + mViews.size() + " Status");
+			for (int i = 1; i < mViews.size(); ++i) {
+				ChatView cv = mViews.get(i);
+				cv.setText((i + 1) + "/" + mViews.size() + " "
+						+ cv.getConversationId());
+			}
+
 			notifyDataSetChanged();
 		}
 
@@ -262,21 +273,35 @@ public class ChatActivity extends Activity {
 			String conversation = mFlipAdapter.getChatView(
 					mFlipView.getCurrentIndex()).getConversationId();
 			String parts[] = msg.split(" ");
-			if (parts.length >= 2 && parts[0].toUpperCase().equals("/JOIN")) {
+			if (parts.length >= 2 && parts[0].equalsIgnoreCase("/JOIN")) {
 				mChatService.sendMessage("JOIN "
 						+ ChatUtils.concat(parts, 1, parts.length - 1, false));
 				return true;
 			}
-			if (parts.length >= 2 && parts[0].toUpperCase().equals("/ME")
+			if (parts.length >= 2 && parts[0].equalsIgnoreCase("/ME")
 					&& conversation.length() > 0) {
 				mChatService.sendMessage("PRIVMSG " + conversation
 						+ " :\u0001ACTION "
 						+ ChatUtils.concat(parts, 1, parts.length - 1, false));
 				return true;
 			}
-			if (parts.length >= 3 && parts[0].toUpperCase().equals("/MSG")) {
+			if (parts.length >= 3 && parts[0].equalsIgnoreCase("/MSG")) {
 				mChatService.sendMessage("PRIVMSG " + parts[1] + " :"
 						+ ChatUtils.concat(parts, 2, parts.length - 1, false));
+				return true;
+			}
+			if (parts.length >= 1 && parts[0].equalsIgnoreCase("/PART")) {
+				if (conversation.length() > 0) {
+					if (conversation.startsWith("#")) {
+						mChatService.sendMessage("PART " + conversation);
+					}
+					mFlipAdapter.removeChatView(mFlipAdapter
+							.getChatView(conversation));
+				}
+				return true;
+			}
+			if (parts.length >= 2 && parts[0].equalsIgnoreCase("/NICK")) {
+				mChatService.sendMessage("NICK " + parts[1]);
 				return true;
 			}
 			if (parts.length > 0 && conversation.length() > 0) {
@@ -297,11 +322,6 @@ public class ChatActivity extends Activity {
 					.getChatService();
 			mChatService.setObserver(mChatServiceObserver);
 			if (mChatService.isConnected()) {
-
-				while (mFlipAdapter.getCount() > 0) {
-					mFlipAdapter.removeChatView(mFlipAdapter.getChatView(0));
-				}
-
 				for (String id : mChatService.getConversationIds()) {
 					ChatConversation conversation = mChatService
 							.getConversation(id);
@@ -327,6 +347,11 @@ public class ChatActivity extends Activity {
 				Button connect = (Button) findViewById(R.id.root_header_connect);
 				connect.setText(R.string.root_header_connect);
 				connect.setTag(false);
+
+				ChatView chatView = (ChatView) getLayoutInflater().inflate(
+						R.layout.chat_view, null);
+				chatView.setConversationId("");
+				mFlipAdapter.addChatView(chatView);
 			}
 		}
 

@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 public class ChatView extends RelativeLayout {
 
+	private String mConversationId;
 	private ScrollDownRunnable mScrollDownRunnable = new ScrollDownRunnable();
 
 	public ChatView(Context context) {
@@ -37,8 +38,7 @@ public class ChatView extends RelativeLayout {
 	 * Getter for conversation id.
 	 */
 	public String getConversationId() {
-		TextView tv = (TextView) findViewById(R.id.chat_title);
-		return (String) tv.getText();
+		return mConversationId == null ? "" : mConversationId;
 	}
 
 	@Override
@@ -51,15 +51,15 @@ public class ChatView extends RelativeLayout {
 	 * Setter for conversation id.
 	 */
 	public void setConversationId(String conversationId) {
+		mConversationId = conversationId;
+	}
+
+	public void setText(String text) {
 		TextView tv = (TextView) findViewById(R.id.chat_title);
-		tv.setText(conversationId);
-		if (conversationId.length() == 0) {
-			tv.setVisibility(View.GONE);
-		} else {
-			tv.setVisibility(View.VISIBLE);
-			tv.setTextColor(tv.getTextColors().withAlpha(0x80));
-			tv.getBackground().setAlpha(0x80);
-		}
+		tv.setText(text);
+		tv.setVisibility(View.VISIBLE);
+		tv.setTextColor(tv.getTextColors().withAlpha(0x80));
+		tv.getBackground().setAlpha(0x80);
 	}
 
 	/**
