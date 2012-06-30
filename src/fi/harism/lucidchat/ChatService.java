@@ -63,11 +63,15 @@ public class ChatService extends Service {
 	}
 
 	public void disconnect() {
+		for (String key : mConversationMap.keySet()) {
+			if (!key.isEmpty()) {
+				mConversationMap.remove(key);
+			}
+		}
 		if (mChatRunnable != null) {
 			mChatRunnable.disconnect();
 			mChatRunnable = null;
 		}
-		mConversationMap.clear();
 		stopForeground(true);
 	}
 
