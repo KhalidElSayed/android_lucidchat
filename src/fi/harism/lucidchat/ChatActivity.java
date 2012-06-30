@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.Vector;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -45,7 +46,6 @@ public class ChatActivity extends Activity {
 
 	private ChatService mChatService;
 	private ChatService.Observer mChatServiceObserver = new ChatServiceObserver();
-	private ChatDlgError mDlgError;
 	private ChatDlgLogin mDlgLogin;
 	private FlipAdapterImpl mFlipAdapter = new FlipAdapterImpl();
 	private ChatFlipView mFlipView;
@@ -266,11 +266,6 @@ public class ChatActivity extends Activity {
 				connect.setTag(true);
 				break;
 			}
-			case R.id.dlg_error_ok: {
-				mDlgError.dismiss();
-				mDlgError = null;
-				break;
-			}
 			}
 		}
 
@@ -307,6 +302,13 @@ public class ChatActivity extends Activity {
 			}
 			if (parts.length >= 2 && parts[0].equalsIgnoreCase("/NICK")) {
 				mChatService.sendMessage("NICK " + parts[1]);
+				return true;
+			}
+			if (parts.length >= 1 && parts[0].equalsIgnoreCase("/HELP")) {
+				Dialog dlg = new Dialog(ChatActivity.this);
+				dlg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+				dlg.setContentView(R.layout.dialog_help);
+				dlg.show();
 				return true;
 			}
 			if (parts.length > 0 && conversation.length() > 0) {

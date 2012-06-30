@@ -4,7 +4,7 @@
     <string name="app_name">Lucid Chat</string>
     <string name="root_header_connect">Connect</string>
     <string name="root_header_disconnect">Disconnect</string>
-    
+
     <!-- Chat messages -->
     <string name="chat_nick_you">You are now known as %1$s.</string>
     <string name="chat_nick">%1$s is now known as %2$s.</string>
@@ -12,7 +12,7 @@
     <string name="chat_join_you">You have joined.</string>
     <string name="chat_join_users">There are %1$s users.</string>
     <string name="chat_part">%1$s has left (\"%2$s\").</string>
-    
+
     <!-- Login dialog -->
     <string name="dlg_login_title">Login to Server</string>
     <string name="dlg_login_nick">Nickname:</string>
@@ -21,8 +21,21 @@
     <string name="dlg_login_cancel">Cancel</string>
     <string name="dlg_login_login">Login</string>
 
-    <!-- Error dialog -->
-    <string name="dlg_error_title">Error</string>
-    <string name="dlg_error_dismiss">Ok</string>
+    <!-- Help dialog -->
+    <string name="dlg_help_title">Help</string>
+    <string name="dlg_help_ok">OK</string>
+    <string name="dlg_help_text">\n
+Available commands:\n
+\n
+/help : opens this dialog\n
+/nick nick : change nick\n
+/msg nick msg : send msg to nick\n
+/msg #chan msg : send msg to #chan\n
+/join #chan : join channel\n
+/part : close current view\n
+/me msg : send action to current view\n
+\n
+msg : send msg to current view\n
+\n</string>
 
 </resources>

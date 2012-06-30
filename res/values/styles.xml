@@ -4,6 +4,10 @@
     <style name="textview">
         <item name="android:typeface">monospace</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="textview_big" parent="textview">
         <item name="android:textSize">14sp</item>
     </style>
 
@@ -14,7 +18,7 @@
     </style>
 
     <style name="edittext" parent="textview_title">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:background">#4FFF</item>
     </style>
 
@@ -25,7 +29,7 @@
 
     <style name="imagebutton" parent="button">
         <item name="android:layout_width">40dp</item>
-        <item name="android:layout_height">32dp</item>
+        <item name="android:layout_height">28dp</item>
         <item name="android:scaleType">centerInside</item>
     </style>
 
