@@ -7,7 +7,9 @@ This project has only started and is still under heavy work.
 2. After logging in application is more/less a socket connection only.
 
 <pre>
+- /nick nick : changes nickname
 - /join #channel : joins a channel
+- /part : closes active window
 - /msg whom messsage : sends a message to a nickname
 - /msg #channel message : sends a message to channel
 - /me action : sends /me action to active window
