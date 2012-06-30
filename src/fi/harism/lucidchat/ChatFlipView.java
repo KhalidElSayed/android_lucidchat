@@ -19,7 +19,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
+public class ChatFlipView extends FrameLayout {
 
 	// Static values for current flip mode.
 	private static final int FLIP_NEXT = 0;
@@ -111,33 +111,26 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 	}
 
 	@Override
-	public boolean onTouch(View view, MotionEvent event) {
-		view.onTouchEvent(event);
-
+	public boolean onInterceptTouchEvent(MotionEvent event) {
 		if (mFlipMode == FLIP_NONE) {
 			switch (event.getAction()) {
-			case MotionEvent.ACTION_DOWN:
 			case MotionEvent.ACTION_MOVE:
-				if (mTouchPos.x == 0 && mTouchPos.y == 0) {
-					mTouchPos.set(event.getX(), event.getY());
-					return true;
-				} else if (Math.abs(event.getX() - mTouchPos.x) > 2 * Math
-						.abs(event.getY() - mTouchPos.y)) {
-					mTouchPos.set(0, 0);
-				} else {
-					mTouchPos.set(0, 0);
-					return true;
+				if (Math.abs(event.getX() - mTouchPos.x) > 2 * Math.abs(event
+						.getY() - mTouchPos.y)) {
+					onTouchEvent(event);
 				}
+			case MotionEvent.ACTION_DOWN:
+				mTouchPos.set(event.getX(), event.getY());
 				break;
-			case MotionEvent.ACTION_UP:
-				mTouchPos.set(0, 0);
-				return true;
 			}
+		} else {
+			onTouchEvent(event);
 		}
-		if (event.getAction() == MotionEvent.ACTION_UP) {
-			mTouchPos.set(0, 0);
-		}
+		return false;
+	}
 
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
 		float mx = event.getX();
 		switch (event.getAction()) {
 
@@ -178,7 +171,7 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 			break;
 		}
 
-		return true;
+		return false;
 	}
 
 	/**
@@ -206,7 +199,6 @@ public class ChatFlipView extends FrameLayout implements View.OnTouchListener {
 		if (index >= 0 && index < mViewChildren.length) {
 			setViewVisibility(mViewChildren[index], View.VISIBLE);
 			mViewChildren[index].bringToFront();
-			mViewChildren[index].setOnTouchListener(this);
 		}
 		if (index > 0) {
 			setViewVisibility(mViewChildren[index - 1], View.INVISIBLE);

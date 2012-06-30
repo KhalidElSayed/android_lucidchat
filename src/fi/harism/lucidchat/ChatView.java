@@ -62,12 +62,6 @@ public class ChatView extends RelativeLayout {
 		}
 	}
 
-	@Override
-	public void setOnTouchListener(View.OnTouchListener listener) {
-		ScrollView sv = (ScrollView) findViewById(R.id.chat_scrollview);
-		sv.setOnTouchListener(listener);
-	}
-
 	/**
 	 * Private runnable for handling scroll down events.
 	 */
