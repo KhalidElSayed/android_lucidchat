@@ -181,7 +181,7 @@ public class ChatFlipView extends FrameLayout {
 	 *            View Adapter.
 	 */
 	public void setAdapter(ChatFlipAdapter adapter) {
-		adapter.setObserver(mDataSetObserver);
+		adapter.addObserver(mDataSetObserver);
 
 		int count = adapter.getCount();
 		mViewChildren = new View[count];

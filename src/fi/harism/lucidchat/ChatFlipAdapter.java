@@ -1,11 +1,17 @@
 package fi.harism.lucidchat;
 
+import java.util.Vector;
+
 import android.view.View;
 import android.view.ViewGroup;
 
 public abstract class ChatFlipAdapter {
 
-	private Observer mObserver;
+	private Vector<Observer> mObservers = new Vector<Observer>();
+
+	public void addObserver(Observer observer) {
+		mObservers.add(observer);
+	}
 
 	/**
 	 * Getter for individual Views. Container is the parent View and position is
@@ -21,13 +27,13 @@ public abstract class ChatFlipAdapter {
 	public abstract int getCount();
 
 	public void notifyDataSetChanged() {
-		if (mObserver != null) {
-			mObserver.onDataSetChanged(this);
+		for (Observer observer : mObservers) {
+			observer.onDataSetChanged(this);
 		}
 	}
 
-	public void setObserver(Observer observer) {
-		mObserver = observer;
+	public void removeObserver(Observer observer) {
+		mObservers.remove(observer);
 	}
 
 	public interface Observer {

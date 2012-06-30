@@ -48,9 +48,10 @@ public class ChatActivity extends Activity {
 	private ChatService.Observer mChatServiceObserver = new ChatServiceObserver();
 	private ChatDlgLogin mDlgLogin;
 	private FlipAdapterImpl mFlipAdapter = new FlipAdapterImpl();
-	private ChatFlipView mFlipView;
 	private OnClickListenerImpl mOnClickListener = new OnClickListenerImpl();
 	private ServiceConnectionImpl mServiceConnection = new ServiceConnectionImpl();
+	private ChatFlipView mViewFlip;
+	private ChatTabs mViewTabs;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,8 +66,10 @@ public class ChatActivity extends Activity {
 		findViewById(R.id.root_footer_send)
 				.setOnClickListener(mOnClickListener);
 
-		mFlipView = (ChatFlipView) findViewById(R.id.root_flipview);
-		mFlipView.setAdapter(mFlipAdapter);
+		mViewFlip = (ChatFlipView) findViewById(R.id.root_flipview);
+		mViewFlip.setAdapter(mFlipAdapter);
+
+		mViewTabs = (ChatTabs) findViewById(R.id.root_tabs);
 
 		setSendEnabled(false);
 
@@ -150,14 +153,6 @@ public class ChatActivity extends Activity {
 		public void addChatView(ChatView view) {
 			mViews.add(view);
 			Collections.sort(mViews, mComparator);
-
-			mViews.get(0).setText("1/" + mViews.size() + " Status");
-			for (int i = 1; i < mViews.size(); ++i) {
-				ChatView cv = mViews.get(i);
-				cv.setText((i + 1) + "/" + mViews.size() + " "
-						+ cv.getConversationId());
-			}
-
 			notifyDataSetChanged();
 		}
 
@@ -185,16 +180,22 @@ public class ChatActivity extends Activity {
 			return mViews.size();
 		}
 
+		@Override
+		public void notifyDataSetChanged() {
+			String tabs[] = new String[mViews.size()];
+			for (int i = 0; i < mViews.size(); ++i) {
+				if (i == 0) {
+					tabs[i] = "Status";
+				} else {
+					tabs[i] = mViews.get(i).getConversationId();
+				}
+			}
+			mViewTabs.setTabs(tabs, mOnClickListener);
+			super.notifyDataSetChanged();
+		}
+
 		public void removeChatView(ChatView view) {
 			mViews.remove(view);
-
-			mViews.get(0).setText("1/" + mViews.size() + " Status");
-			for (int i = 1; i < mViews.size(); ++i) {
-				ChatView cv = mViews.get(i);
-				cv.setText((i + 1) + "/" + mViews.size() + " "
-						+ cv.getConversationId());
-			}
-
 			notifyDataSetChanged();
 		}
 
@@ -271,7 +272,7 @@ public class ChatActivity extends Activity {
 
 		private boolean sendImpl(String msg) {
 			String conversation = mFlipAdapter.getChatView(
-					mFlipView.getCurrentIndex()).getConversationId();
+					mViewFlip.getCurrentIndex()).getConversationId();
 			String parts[] = msg.split(" ");
 			if (parts.length >= 2 && parts[0].equalsIgnoreCase("/JOIN")) {
 				mChatService.sendMessage("JOIN "

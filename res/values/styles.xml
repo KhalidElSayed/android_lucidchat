@@ -22,6 +22,15 @@
         <item name="android:background">#4FFF</item>
     </style>
 
+    <style name="tab" parent="textview_title">
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:background">#0000</item>
+    </style>
+
     <style name="button" parent="textview_title">
         <item name="android:padding">2dp</item>
         <item name="android:background">@drawable/bg_button</item>
@@ -45,7 +54,6 @@
 
     <style name="footer">
         <item name="android:id">@+id/footer</item>
-        <item name="android:background">@drawable/bg_pattern_light</item>
         <item name="android:padding">2dp</item>
         <item name="android:layout_marginTop">2dp</item>
     </style>

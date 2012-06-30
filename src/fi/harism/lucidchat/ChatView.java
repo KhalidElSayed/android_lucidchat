@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
-import android.widget.TextView;
 
 public class ChatView extends RelativeLayout {
 
@@ -52,14 +51,6 @@ public class ChatView extends RelativeLayout {
 	 */
 	public void setConversationId(String conversationId) {
 		mConversationId = conversationId;
-	}
-
-	public void setText(String text) {
-		TextView tv = (TextView) findViewById(R.id.chat_title);
-		tv.setText(text);
-		tv.setVisibility(View.VISIBLE);
-		tv.setTextColor(tv.getTextColors().withAlpha(0x80));
-		tv.getBackground().setAlpha(0x80);
 	}
 
 	/**
