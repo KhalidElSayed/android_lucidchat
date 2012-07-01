@@ -1,7 +1,6 @@
 package fi.harism.lucidchat;
 
 import android.content.Context;
-import android.graphics.Rect;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
@@ -32,10 +31,6 @@ public class ChatTabs extends HorizontalScrollView {
 			View v = views.getChildAt(i);
 			if (i == index) {
 				v.setEnabled(false);
-				Rect r = new Rect();
-				v.getHitRect(r);
-				int x = computeScrollDeltaToGetChildRectOnScreen(r);
-				smoothScrollTo(x, 0);
 			} else {
 				v.setEnabled(true);
 			}
