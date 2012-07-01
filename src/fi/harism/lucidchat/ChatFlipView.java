@@ -223,7 +223,6 @@ public class ChatFlipView extends FrameLayout {
 		for (int i = 0; i < count; ++i) {
 			mViewChildren[i] = adapter.createView(this, i);
 		}
-		mViewChildIndex = 0;
 		setCurrentView(0);
 	}
 
@@ -234,6 +233,7 @@ public class ChatFlipView extends FrameLayout {
 		if (index >= 0 && index < mViewChildren.length) {
 			setViewVisibility(mViewChildren[index], View.VISIBLE);
 			mViewChildren[index].bringToFront();
+			mViewChildIndex = index;
 
 			if (mObserver != null) {
 				mObserver.onPageChanged(index);
@@ -306,8 +306,7 @@ public class ChatFlipView extends FrameLayout {
 			for (int i = 0; i < count; ++i) {
 				mViewChildren[i] = adapter.createView(ChatFlipView.this, i);
 			}
-			mViewChildIndex = Math.max(0, Math.min(mViewChildIndex, count - 1));
-			setCurrentView(mViewChildIndex);
+			setCurrentView(Math.max(0, Math.min(mViewChildIndex, count - 1)));
 		}
 
 	}
