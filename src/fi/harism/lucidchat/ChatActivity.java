@@ -48,6 +48,7 @@ public class ChatActivity extends Activity {
 	private ChatService.Observer mChatServiceObserver = new ChatServiceObserver();
 	private ChatDlgLogin mDlgLogin;
 	private FlipAdapterImpl mFlipAdapter = new FlipAdapterImpl();
+	private FlipObserverImpl mFlipObserver = new FlipObserverImpl();
 	private OnClickListenerImpl mOnClickListener = new OnClickListenerImpl();
 	private ServiceConnectionImpl mServiceConnection = new ServiceConnectionImpl();
 	private ChatFlipView mViewFlip;
@@ -68,6 +69,7 @@ public class ChatActivity extends Activity {
 
 		mViewFlip = (ChatFlipView) findViewById(R.id.root_flipview);
 		mViewFlip.setAdapter(mFlipAdapter);
+		mViewFlip.setObserver(mFlipObserver);
 
 		mViewTabs = (ChatTabs) findViewById(R.id.root_tabs);
 
@@ -180,18 +182,24 @@ public class ChatActivity extends Activity {
 			return mViews.size();
 		}
 
-		@Override
-		public void notifyDataSetChanged() {
-			String tabs[] = new String[mViews.size()];
+		public int getIndex(String conversationId) {
 			for (int i = 0; i < mViews.size(); ++i) {
-				if (i == 0) {
-					tabs[i] = "Status";
-				} else {
-					tabs[i] = mViews.get(i).getConversationId();
+				if (mViews.get(i).getConversationId().equals(conversationId)) {
+					return i;
 				}
 			}
-			mViewTabs.setTabs(tabs, mOnClickListener);
+			return -1;
+		}
+
+		@Override
+		public void notifyDataSetChanged() {
 			super.notifyDataSetChanged();
+			String tabs[] = new String[mViews.size()];
+			for (int i = 0; i < mViews.size(); ++i) {
+				tabs[i] = mViews.get(i).getConversationId();
+			}
+			mViewTabs.setTabs(tabs, mOnClickListener);
+			mViewTabs.setSelectedTab(mViewFlip.getCurrentIndex());
 		}
 
 		public void removeChatView(ChatView view) {
@@ -199,6 +207,13 @@ public class ChatActivity extends Activity {
 			notifyDataSetChanged();
 		}
 
+	}
+
+	private class FlipObserverImpl implements ChatFlipView.Observer {
+		@Override
+		public void onPageChanged(int index) {
+			mViewTabs.setSelectedTab(index);
+		}
 	}
 
 	private class OnClickListenerImpl implements View.OnClickListener {
@@ -265,6 +280,13 @@ public class ChatActivity extends Activity {
 				Button connect = (Button) findViewById(R.id.root_header_connect);
 				connect.setText(R.string.root_header_disconnect);
 				connect.setTag(true);
+				break;
+			}
+			case R.id.chat_tab: {
+				String conversationId = (String) view.getTag();
+				int idx = mFlipAdapter.getIndex(conversationId);
+				mViewFlip.animateCurrentView(idx);
+				mViewTabs.setSelectedTab(idx);
 				break;
 			}
 			}
@@ -367,7 +389,6 @@ public class ChatActivity extends Activity {
 		public void onServiceDisconnected(ComponentName name) {
 			mChatService = null;
 		}
-
 	}
 
 }

@@ -63,7 +63,8 @@ public class ChatService extends Service {
 	}
 
 	public void disconnect() {
-		for (String key : mConversationMap.keySet()) {
+		Set<String> keys = mConversationMap.keySet();
+		for (String key : keys) {
 			if (!key.isEmpty()) {
 				mConversationMap.remove(key);
 			}

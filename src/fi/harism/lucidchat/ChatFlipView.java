@@ -78,6 +78,7 @@ public class ChatFlipView extends FrameLayout {
 	private DataSetObserver mDataSetObserver = new DataSetObserver();
 	private int mFlipMode = FLIP_NONE;
 	private FlipRenderer mFlipRenderer;
+	private Observer mObserver;
 	private PointF mTouchPos = new PointF();
 	private int mViewChildIndex = 0;
 	private View[] mViewChildren = new View[0];
@@ -95,6 +96,36 @@ public class ChatFlipView extends FrameLayout {
 	public ChatFlipView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init(context);
+	}
+
+	public void animateCurrentView(final int index) {
+		if (index < 0 || index >= mViewChildren.length
+				|| index == mViewChildIndex) {
+			return;
+		}
+
+		mFlipMode = FLIP_NONE;
+		setViewVisibility(mViewChildren[index], View.INVISIBLE);
+		mViewChildren[index].requestLayout();
+		post(new Runnable() {
+			@Override
+			public void run() {
+				mFlipRenderer.bringToFront();
+				if (index < mViewChildIndex) {
+					updateRendererBitmaps(index, mViewChildIndex);
+					mFlipRenderer.setFlipPosition(-1f);
+					mFlipRenderer.moveFlipPosition(1f);
+				} else if (index > mViewChildIndex) {
+					updateRendererBitmaps(mViewChildIndex, index);
+					mFlipRenderer.setFlipPosition(1f);
+					mFlipRenderer.moveFlipPosition(-1f);
+				}
+
+				mViewChildIndex = index;
+				mFlipRenderer.requestRender();
+				invalidate();
+			}
+		});
 	}
 
 	public int getCurrentIndex() {
@@ -140,6 +171,7 @@ public class ChatFlipView extends FrameLayout {
 				float fp = (2 * mx - getWidth()) / getWidth();
 				fp = Math.min(1f, Math.max(-1f, fp));
 				mFlipRenderer.moveFlipPosition(fp);
+				mFlipRenderer.requestRender();
 			} else {
 				if (mx * 2 > getWidth()
 						&& mViewChildIndex < mViewChildren.length - 1) {
@@ -147,6 +179,7 @@ public class ChatFlipView extends FrameLayout {
 					updateRendererBitmaps(mViewChildIndex, mViewChildIndex + 1);
 					mFlipRenderer.bringToFront();
 					mFlipRenderer.setFlipPosition(1f);
+					mFlipRenderer.requestRender();
 					invalidate();
 				}
 				if (mx * 2 < getWidth() && mViewChildIndex > 0) {
@@ -154,6 +187,7 @@ public class ChatFlipView extends FrameLayout {
 					updateRendererBitmaps(mViewChildIndex - 1, mViewChildIndex);
 					mFlipRenderer.bringToFront();
 					mFlipRenderer.setFlipPosition(-1f);
+					mFlipRenderer.requestRender();
 					invalidate();
 				}
 			}
@@ -168,6 +202,7 @@ public class ChatFlipView extends FrameLayout {
 			}
 			mFlipMode = FLIP_NONE;
 			mFlipRenderer.moveFlipPosition(mx * 2 > getWidth() ? 1f : -1f);
+			mFlipRenderer.requestRender();
 			break;
 		}
 
@@ -199,6 +234,10 @@ public class ChatFlipView extends FrameLayout {
 		if (index >= 0 && index < mViewChildren.length) {
 			setViewVisibility(mViewChildren[index], View.VISIBLE);
 			mViewChildren[index].bringToFront();
+
+			if (mObserver != null) {
+				mObserver.onPageChanged(index);
+			}
 		}
 		if (index > 0) {
 			setViewVisibility(mViewChildren[index - 1], View.INVISIBLE);
@@ -215,6 +254,10 @@ public class ChatFlipView extends FrameLayout {
 		}
 
 		invalidate();
+	}
+
+	public void setObserver(Observer observer) {
+		mObserver = observer;
 	}
 
 	/**
@@ -340,7 +383,6 @@ public class ChatFlipView extends FrameLayout {
 		 */
 		public void moveFlipPosition(float posY) {
 			mFlipPositionTarget = posY;
-			requestRender();
 		}
 
 		@Override
@@ -465,9 +507,12 @@ public class ChatFlipView extends FrameLayout {
 			mFlipPosition = posY;
 			mFlipPositionTarget = posY;
 			mLastRenderTime = SystemClock.uptimeMillis();
-			requestRender();
 		}
 
+	}
+
+	public interface Observer {
+		public void onPageChanged(int index);
 	}
 
 }

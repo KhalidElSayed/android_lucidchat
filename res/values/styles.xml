@@ -24,6 +24,7 @@
 
     <style name="tab" parent="textview_title">
         <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/tab_text</item>
         <item name="android:paddingTop">2dp</item>
         <item name="android:paddingBottom">2dp</item>
         <item name="android:paddingLeft">5dp</item>
