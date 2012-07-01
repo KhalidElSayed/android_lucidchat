@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="textview">
+        <item name="android:typeface">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="textview_big" parent="textview">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="textview_title" parent="textview">
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">#EEE</item>
+        <item name="android:textSize">26sp</item>
+    </style>
+
+    <style name="edittext" parent="textview_title">
+        <item name="android:textSize">24sp</item>
+        <item name="android:background">#4FFF</item>
+    </style>
+
+    <style name="tab" parent="textview_title">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/tab_text</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:background">#0000</item>
+    </style>
+
+    <style name="button" parent="textview_title">
+        <item name="android:padding">2dp</item>
+        <item name="android:background">@drawable/bg_button</item>
+    </style>
+
+    <style name="imagebutton" parent="button">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="header">
+        <item name="android:id">@+id/header</item>
+        <item name="android:background">@drawable/bg_pattern_light</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+    </style>
+
+    <style name="footer">
+        <item name="android:id">@+id/footer</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <style name="content">
+        <item name="android:background">@drawable/bg_pattern_dark</item>
+        <item name="android:layout_below">@id/header</item>
+        <item name="android:layout_above">@id/footer</item>
+    </style>
+
+    <style name="textview_conversation" parent="textview">
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:background">@drawable/bg_pattern_light</item>
+    </style>
+
+</resources>
